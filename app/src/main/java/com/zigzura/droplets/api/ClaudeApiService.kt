@@ -10,7 +10,7 @@ import retrofit2.http.POST
 interface ClaudeApiService {
     @POST("v1/messages")
     suspend fun sendMessage(
-        @Header("Authorization") authorization: String,
+        @Header("x-api-key") apiKey: String,
         @Header("Content-Type") contentType: String = "application/json",
         @Header("anthropic-version") anthropicVersion: String = "2023-06-01",
         @Body request: ClaudeRequest

@@ -16,6 +16,14 @@ class ClaudeRepository(private val preferencesManager: PreferencesManager) {
                 return Result.failure(Exception("API key not found"))
             }
 
+            // Enhanced API key validation
+            if (!apiKey.startsWith("sk-ant-")) {
+                Log.e("ClaudeRepository", "Invalid API key format. Expected format: sk-ant-...")
+                return Result.failure(Exception("Invalid API key format. Claude API keys should start with 'sk-ant-'"))
+            }
+
+            Log.d("ClaudeRepository", "Using API key: ${apiKey.take(10)}...")
+
             val enhancedPrompt = """
                 Generate a complete HTML page based on this request: $prompt
                 
@@ -39,10 +47,14 @@ class ClaudeRepository(private val preferencesManager: PreferencesManager) {
                 )
             )
 
+            Log.d("ClaudeRepository", "Sending request to Claude API...")
+
             val response = ApiClient.claudeApiService.sendMessage(
-                authorization = "Bearer $apiKey",
+                apiKey = apiKey,
                 request = request
             )
+
+            Log.d("ClaudeRepository", "Response code: ${response.code()}")
 
             if (response.isSuccessful) {
                 val claudeResponse = response.body()
@@ -53,8 +65,10 @@ class ClaudeRepository(private val preferencesManager: PreferencesManager) {
 
                 Result.success(htmlContent)
             } else {
+                val errorBody = response.errorBody()?.string()
                 Log.e("ClaudeRepository", "API Error: ${response.code()} - ${response.message()}")
-                Result.failure(Exception("API Error: ${response.code()} - ${response.message()}"))
+                Log.e("ClaudeRepository", "Error body: $errorBody")
+                Result.failure(Exception("API Error: ${response.code()} - ${response.message()}\nDetails: $errorBody"))
             }
         } catch (e: Exception) {
             Log.e("ClaudeRepository", "Exception: ${e.message}", e)

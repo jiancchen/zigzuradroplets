@@ -45,192 +45,199 @@ fun MainScreen(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Top App Bar
-        TopAppBar(
-            title = { Text("Droplets") },
-            actions = {
-                IconButton(onClick = { showHistory = !showHistory }) {
-                    Icon(Icons.Default.List, contentDescription = "History")
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = { Text("Droplets") },
+                actions = {
+                    IconButton(onClick = { showHistory = !showHistory }) {
+                        Icon(Icons.Default.List, contentDescription = "History")
+                    }
+                    IconButton(onClick = onNavigateToSignup) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    }
                 }
-                IconButton(onClick = onNavigateToSignup) {
-                    Icon(Icons.Default.Settings, contentDescription = "Settings")
-                }
-            }
-        )
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            if (showHistory) {
+                // History Panel
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .padding(8.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Prompt History",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (promptHistory.isNotEmpty()) {
+                                TextButton(onClick = viewModel::clearHistory) {
+                                    Text("Clear All")
+                                }
+                            }
+                        }
 
-        if (showHistory) {
-            // History Panel
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .padding(8.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Prompt History",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        if (promptHistory.isNotEmpty()) {
-                            TextButton(onClick = viewModel::clearHistory) {
-                                Text("Clear All")
+                        if (promptHistory.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No prompts yet. Start by entering a prompt below!",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        } else {
+                            LazyColumn {
+                                items(promptHistory) { historyItem ->
+                                    HistoryItem(
+                                        historyItem = historyItem,
+                                        onClick = {
+                                            viewModel.loadHistoryItem(historyItem)
+                                            showHistory = false
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
+                }
+            }
 
-                    if (promptHistory.isEmpty()) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
+            // WebView
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                if (currentHtml.isNotEmpty()) {
+                    Weblet(
+                        htmlContent = currentHtml
+                    )
+                } else {
+                    // Placeholder when no HTML is loaded
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = "No prompts yet. Start by entering a prompt below!",
+                                text = "💧",
+                                fontSize = 48.sp
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Enter a prompt below to generate HTML",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                    } else {
-                        LazyColumn {
-                            items(promptHistory) { historyItem ->
-                                HistoryItem(
-                                    historyItem = historyItem,
-                                    onClick = {
-                                        viewModel.loadHistoryItem(historyItem)
-                                        showHistory = false
-                                    }
-                                )
+                    }
+                }
+
+                // Loading overlay
+                if (isLoading) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Card(
+                            modifier = Modifier.padding(32.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text("Generating HTML...")
                             }
                         }
                     }
                 }
             }
-        }
 
-        // WebView
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        ) {
-            if (currentHtml.isNotEmpty()) {
-                Weblet(
-                    paddingValues = PaddingValues(0.dp),
-                    htmlContent = currentHtml
-                )
-            } else {
-                // Placeholder when no HTML is loaded
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "💧",
-                            fontSize = 48.sp
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Enter a prompt below to generate HTML",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
-            // Loading overlay
-            if (isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Card(
-                        modifier = Modifier.padding(32.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            CircularProgressIndicator()
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text("Generating HTML...")
-                        }
-                    }
-                }
-            }
-        }
-
-        // Prompt Input
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.Bottom
-            ) {
-                OutlinedTextField(
-                    value = prompt,
-                    onValueChange = { prompt = it },
-                    label = { Text("Enter your prompt") },
-                    placeholder = { Text("Create a beautiful landing page for a coffee shop...") },
-                    modifier = Modifier.weight(1f),
-                    maxLines = 3,
-                    enabled = !isLoading
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                FloatingActionButton(
-                    onClick = {
-                        if (prompt.isNotBlank()) {
-                            viewModel.generateHtml(prompt)
-                            prompt = ""
-                        }
-                    },
-                    modifier = Modifier.size(48.dp),
-                    containerColor = MaterialTheme.colorScheme.primary
-                ) {
-                    Icon(
-                        Icons.Default.Send,
-                        contentDescription = "Send",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-            }
-        }
-
-        // Error display
-        error?.let { errorMessage ->
+            // Prompt Input
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer
-                )
+                    .padding(8.dp)
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Bottom
                 ) {
-                    Text(
-                        text = errorMessage,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = Modifier.weight(1f)
+                    OutlinedTextField(
+                        value = prompt,
+                        onValueChange = { prompt = it },
+                        label = { Text("Enter your prompt") },
+                        placeholder = { Text("Create a beautiful landing page for a coffee shop...") },
+                        modifier = Modifier.weight(1f),
+                        maxLines = 3,
+                        enabled = !isLoading
                     )
-                    IconButton(onClick = viewModel::clearError) {
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    FloatingActionButton(
+                        onClick = {
+                            if (prompt.isNotBlank()) {
+                                viewModel.generateHtml(prompt)
+                                prompt = ""
+                            }
+                        },
+                        modifier = Modifier.size(48.dp),
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ) {
                         Icon(
-                            Icons.Default.Clear,
-                            contentDescription = "Clear error",
-                            tint = MaterialTheme.colorScheme.onErrorContainer
+                            Icons.Default.Send,
+                            contentDescription = "Send",
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
+                    }
+                }
+            }
+
+            // Error display
+            error?.let { errorMessage ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = errorMessage,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = viewModel::clearError) {
+                            Icon(
+                                Icons.Default.Clear,
+                                contentDescription = "Clear error",
+                                tint = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
                     }
                 }
             }
