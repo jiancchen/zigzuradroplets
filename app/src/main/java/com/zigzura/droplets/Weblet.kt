@@ -6,11 +6,16 @@ import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -99,18 +104,20 @@ fun Weblet(paddingValues: PaddingValues = PaddingValues(0.dp), url: String? = nu
         }
     }
 
-    // Properly wrap in Box with correct modifiers
-    Box(
+    // Wrap WebView in a rounded corner Card that fills the width
+    Card(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
+            .fillMaxWidth()
+            .padding(16.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         AndroidView(
             factory = { webView },
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(16.dp)),
             update = { view ->
-                // This update block is called when recomposition happens
-                // We can add any updates here if needed
                 Log.d("Weblet", "AndroidView update called")
             }
         )

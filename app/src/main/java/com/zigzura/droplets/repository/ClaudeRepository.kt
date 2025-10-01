@@ -5,6 +5,7 @@ import com.zigzura.droplets.api.ApiClient
 import com.zigzura.droplets.data.ClaudeMessage
 import com.zigzura.droplets.data.ClaudeRequest
 import com.zigzura.droplets.data.PreferencesManager
+import com.zigzura.droplets.data.PromptGenerator
 import kotlinx.coroutines.flow.first
 
 class ClaudeRepository(private val preferencesManager: PreferencesManager) {
@@ -24,25 +25,13 @@ class ClaudeRepository(private val preferencesManager: PreferencesManager) {
 
             Log.d("ClaudeRepository", "Using API key: ${apiKey.take(10)}...")
 
-            val enhancedPrompt = """
-                Generate a complete HTML page based on this request: $prompt
-                
-                Requirements:
-                - Create a full HTML document with <!DOCTYPE html>, <html>, <head>, and <body> tags
-                - Include appropriate CSS styling within <style> tags in the head
-                - Make it responsive and visually appealing
-                - Use modern CSS practices
-                - Ensure all content is self-contained (no external dependencies)
-                - The page should be functional and interactive if applicable
-                
-                Only return the HTML code, no explanations or markdown formatting.
-            """.trimIndent()
+            // Enhance prompt with instructions for HTML output
 
             val request = ClaudeRequest(
                 messages = listOf(
                     ClaudeMessage(
                         role = "user",
-                        content = enhancedPrompt
+                        content = PromptGenerator.generatePrompt(prompt).trimIndent()
                     )
                 )
             )
@@ -63,7 +52,80 @@ class ClaudeRepository(private val preferencesManager: PreferencesManager) {
                 // Save to history
                 preferencesManager.savePrompt(prompt, htmlContent)
 
-                Result.success(htmlContent)
+                // Create debug HTML with original content
+                val debugHtml = """
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <style>
+                            .debug-info {
+                                position: fixed;
+                                top: 0;
+                                left: 0;
+                                right: 0;
+                                background: rgba(0, 123, 255, 0.9);
+                                color: white;
+                                padding: 8px;
+                                font-family: monospace;
+                                font-size: 11px;
+                                z-index: 10000;
+                                max-height: 60px;
+                                overflow-y: auto;
+                                line-height: 1.2;
+                            }
+                            .debug-toggle {
+                                position: fixed;
+                                top: 5px;
+                                right: 5px;
+                                background: #dc3545;
+                                color: white;
+                                border: none;
+                                padding: 3px 8px;
+                                border-radius: 3px;
+                                font-size: 10px;
+                                z-index: 10001;
+                                cursor: pointer;
+                            }
+                            .original-content {
+                                /* Don't add top margin - let the original content handle its own layout */
+                                position: relative;
+                                z-index: 1;
+                            }
+                            /* Fix for content that uses 100vh */
+                            .original-content body {
+                                padding-top: 0 !important;
+                                margin-top: 0 !important;
+                            }
+                            /* Hide debug by default to avoid layout conflicts */
+                            .debug-info.hidden {
+                                display: none;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <button class="debug-toggle" onclick="toggleDebug()">🐛</button>
+                        <div class="debug-info hidden" id="debug-info">
+                            <strong>Debug:</strong> "${prompt.take(50).replace("\"", "\\\"")}" | ${htmlContent.length}chars | ${java.text.SimpleDateFormat("HH:mm:ss").format(java.util.Date())}
+                        </div>
+                        <div class="original-content">
+                            ${htmlContent}
+                        </div>
+                        <script>
+                            function toggleDebug() {
+                                var debug = document.getElementById('debug-info');
+                                debug.classList.toggle('hidden');
+                            }
+                            // Auto-hide debug after 3 seconds
+                            setTimeout(function() {
+                                document.getElementById('debug-info').classList.add('hidden');
+                            }, 3000);
+                        </script>
+                    </body>
+                    </html>
+                """.trimIndent()
+
+                Result.success(debugHtml)
             } else {
                 val errorBody = response.errorBody()?.string()
                 Log.e("ClaudeRepository", "API Error: ${response.code()} - ${response.message()}")

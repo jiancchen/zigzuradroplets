@@ -26,7 +26,8 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    onNavigateToSignup: () -> Unit
+    onNavigateToSignup: () -> Unit,
+    onNavigateToDebug: () -> Unit
 ) {
     val viewModel: MainViewModel = hiltViewModel()
     val currentHtml by viewModel.currentHtml.collectAsState()
@@ -36,6 +37,7 @@ fun MainScreen(
 
     var prompt by remember { mutableStateOf("") }
     var showHistory by remember { mutableStateOf(false) }
+    var showSettingsMenu by remember { mutableStateOf(false) }
 
     // Show error snackbar
     error?.let { errorMessage ->
@@ -46,7 +48,6 @@ fun MainScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
                 title = { Text("Droplets") },
@@ -54,8 +55,29 @@ fun MainScreen(
                     IconButton(onClick = { showHistory = !showHistory }) {
                         Icon(Icons.Default.List, contentDescription = "History")
                     }
-                    IconButton(onClick = onNavigateToSignup) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    Box {
+                        IconButton(onClick = { showSettingsMenu = true }) {
+                            Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        }
+                        DropdownMenu(
+                            expanded = showSettingsMenu,
+                            onDismissRequest = { showSettingsMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("API Key Settings") },
+                                onClick = {
+                                    showSettingsMenu = false
+                                    onNavigateToSignup()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Debug HTML") },
+                                onClick = {
+                                    showSettingsMenu = false
+                                    onNavigateToDebug()
+                                }
+                            )
+                        }
                     }
                 }
             )

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -16,12 +17,14 @@ import com.zigzura.droplets.navigation.Screen
 import com.zigzura.droplets.ui.screens.MainScreen
 import com.zigzura.droplets.ui.screens.SignupScreen
 import com.zigzura.droplets.ui.screens.SplashScreen
+import com.zigzura.droplets.ui.screens.DebugScreen
 import com.zigzura.droplets.ui.theme.DropletsTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
@@ -74,6 +77,17 @@ fun DropletsNavigation() {
             MainScreen(
                 onNavigateToSignup = {
                     navController.navigate(Screen.Signup.route)
+                },
+                onNavigateToDebug = {
+                    navController.navigate(Screen.Debug.route)
+                }
+            )
+        }
+
+        composable(Screen.Debug.route) {
+            DebugScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }
