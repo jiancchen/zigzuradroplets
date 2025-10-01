@@ -115,7 +115,6 @@ fun MainScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState()) // Make the entire content scrollable
         ) {
             if (showHistory) {
                 // History Panel
