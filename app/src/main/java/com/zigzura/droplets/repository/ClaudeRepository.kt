@@ -17,10 +17,9 @@ data class HtmlGenerationResult(
 
 class ClaudeRepository(private val preferencesManager: PreferencesManager) {
 
-    suspend fun generateHtml(prompt: String, enableDebug: Boolean = false): Result<HtmlGenerationResult> {
+    suspend fun generateHtml(uuid: String, prompt: String, enableDebug: Boolean = false, temperature: Double = 0.3): Result<HtmlGenerationResult> {
         return try {
-            // Generate UUID at the very beginning of the request
-            val uuid = UUID.randomUUID().toString()
+            // UUID is now passed in from the ViewModel - no need to generate here
 
             val apiKey = preferencesManager.apiKey.first()
             if (apiKey.isNullOrBlank()) {
@@ -43,7 +42,8 @@ class ClaudeRepository(private val preferencesManager: PreferencesManager) {
                         role = "user",
                         content = PromptGenerator.generatePrompt(prompt).trimIndent()
                     )
-                )
+                ),
+                temperature = temperature // Pass the temperature parameter
             )
 
             Log.d("ClaudeRepository", "Sending request to Claude API...")

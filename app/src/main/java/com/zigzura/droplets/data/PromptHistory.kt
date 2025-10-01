@@ -18,6 +18,8 @@ data class ClaudeRequest(
     val model: String = "claude-3-haiku-20240307",
     @SerializedName("max_tokens")
     val maxTokens: Int = 4000,
+    @SerializedName("temperature")
+    val temperature: Double = 0.3,
     @SerializedName("messages")
     val messages: List<ClaudeMessage>
 )

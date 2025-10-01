@@ -15,6 +15,7 @@ MOBILE DESIGN:
 - Center content for portrait phones (360-400px width typical)
 - Use min-height: 100vh (NOT height: 100vh) to prevent viewport cutoff
 - For body/container: flex with min-height allows proper scrolling
+- Container width: 90-95% (adapts to phone, tablet, any screen size)
 - Use flexbox/grid for layout
 - Font size ≥16px (prevents zoom on input)
 - Touch targets ≥44px
@@ -42,11 +43,13 @@ AVAILABLE ANDROID FEATURES (ONLY THESE):
   Android.getReminders()→JSON - list reminders
 
 CRITICAL JAVASCRIPT PATTERNS:
-
 ✓ Always check Android availability: if(typeof Android!=='undefined'){...}
-✓ Load data on page load:
-  if (typeof Android !== 'undefined') {
-    loadStoredData();
+✓ IMPORTANT: Android.getAllData() returns an object with ALL keys, not just one value
+✓ To load a specific key: use Android.loadData(key) NOT Android.getAllData()
+✓ Correct pattern for loading:
+  const stored = Android.loadData('tasks');
+  if (stored) {
+    tasks = JSON.parse(stored);
   }
 ✓ When saving, track the KEY used so you can delete with the SAME key later
 
@@ -74,6 +77,7 @@ Default to Design V2 (dark/glassmorphic) unless user specifies otherwise.
 
 Design V2 (DEFAULT - Dark Glassmorphic):
 - Background: Dark slate (#0f172a)
+- Container: width: 90-95%; (no max-width, scales to any device)
 - Container: Semi-transparent dark cards with glassmorphism
   background: linear-gradient(145deg, #1e293b, #0f172a);
   border: 1px solid #334155;
@@ -85,6 +89,7 @@ Design V2 (DEFAULT - Dark Glassmorphic):
 
 Design V1 (Quirky Retro - use if user asks for "fun", "playful", "colorful", "quirky"):
 - Background: Vibrant gradient (purple/pink)
+- Container: width: 90-95%; (no max-width, scales to any device)
 - Container: White card, slightly rotated (-1deg)
 - Colors: Multi-color (yellow #ffd93d, pink #f687b3, green #48bb78, red #fc8181)
 - Typography: Monospace (Courier New), playful text-shadow
@@ -178,9 +183,9 @@ REQUIREMENTS:
 
 CRITICAL: Output ONLY the HTML. Do not wrap in markdown. Do not explain.
 
-User request: %s"""
+User request: """
 
     fun generatePrompt(userInput: String): String {
-        return PROP_FORMAT.format(userInput)
+        return PROP_FORMAT + userInput
     }
 }

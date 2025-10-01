@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -34,17 +35,28 @@ class MainViewModel @Inject constructor(
 
     val promptHistory = preferencesManager.promptHistory
 
-    fun generateHtml(prompt: String, enableDebug: Boolean = false) {
+    fun generateHtml(prompt: String, enableDebug: Boolean = false, temperature: Double = 0.7) {
+        // Generate UUID immediately so it's available to UI right away
+        val uuid = UUID.randomUUID().toString()
+
+        // Create temporary PromptHistory object with the UUID
+        val tempPromptHistory = PromptHistory(
+            id = uuid,
+            prompt = prompt,
+            html = "", // Will be updated when request completes
+            timestamp = System.currentTimeMillis()
+        )
+
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
             _promptRejection.value = null
-            _currentHistoryItem.value = null // Clear history item when generating new HTML
+            _currentHistoryItem.value = tempPromptHistory // Set immediately with UUID
 
-            claudeRepository.generateHtml(prompt, enableDebug).fold(
+            claudeRepository.generateHtml(uuid, prompt, enableDebug, temperature).fold(
                 onSuccess = { result ->
                     _currentHtml.value = result.html
-                    _currentHistoryItem.value = result.promptHistory // Immediately set the PromptHistory with its ID
+                    _currentHistoryItem.value = result.promptHistory // Update with complete data
                 },
                 onFailure = { exception ->
                     val errorMessage = exception.message ?: "Unknown error occurred"
@@ -54,6 +66,7 @@ class MainViewModel @Inject constructor(
                     } else {
                         _error.value = errorMessage
                     }
+                    _currentHistoryItem.value = null // Clear on error
                 }
             )
 
