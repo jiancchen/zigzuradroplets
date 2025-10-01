@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -14,10 +13,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.zigzura.droplets.navigation.Screen
+import com.zigzura.droplets.ui.screens.DebugScreen
 import com.zigzura.droplets.ui.screens.MainScreen
 import com.zigzura.droplets.ui.screens.SignupScreen
 import com.zigzura.droplets.ui.screens.SplashScreen
-import com.zigzura.droplets.ui.screens.DebugScreen
 import com.zigzura.droplets.ui.theme.DropletsTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -26,7 +25,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             DropletsTheme {
                 Surface(

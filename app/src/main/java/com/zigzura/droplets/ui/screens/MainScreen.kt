@@ -3,6 +3,8 @@ package com.zigzura.droplets.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Send
@@ -12,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -33,21 +36,42 @@ fun MainScreen(
     val currentHtml by viewModel.currentHtml.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
+    val promptRejection by viewModel.promptRejection.collectAsState()
     val promptHistory by viewModel.promptHistory.collectAsState(initial = emptyList())
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     var prompt by remember { mutableStateOf("") }
     var showHistory by remember { mutableStateOf(false) }
     var showSettingsMenu by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Show error snackbar
     error?.let { errorMessage ->
         LaunchedEffect(errorMessage) {
-            // You can add SnackbarHost here if needed
+            snackbarHostState.showSnackbar(
+                message = errorMessage,
+                duration = SnackbarDuration.Long
+            )
             viewModel.clearError()
         }
     }
 
+    // Show prompt rejection snackbar
+    promptRejection?.let { rejectionReason ->
+        LaunchedEffect(rejectionReason) {
+            snackbarHostState.showSnackbar(
+                message = "Prompt rejected: $rejectionReason",
+                duration = SnackbarDuration.Long,
+                actionLabel = "OK"
+            )
+            viewModel.clearPromptRejection()
+        }
+    }
+
     Scaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .imePadding(), // This handles keyboard padding
         topBar = {
             TopAppBar(
                 title = { Text("Droplets") },
@@ -81,12 +105,16 @@ fun MainScreen(
                     }
                 }
             )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .verticalScroll(rememberScrollState()) // Make the entire content scrollable
         ) {
             if (showHistory) {
                 // History Panel
@@ -145,7 +173,8 @@ fun MainScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .weight(1f, fill = false) // Don't force fill when keyboard is open
+                    .heightIn(min = 200.dp) // Minimum height for webview
             ) {
                 if (currentHtml.isNotEmpty()) {
                     Weblet(
@@ -210,7 +239,12 @@ fun MainScreen(
                         placeholder = { Text("Create a beautiful landing page for a coffee shop...") },
                         modifier = Modifier.weight(1f),
                         maxLines = 3,
-                        enabled = !isLoading
+                        enabled = !isLoading,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            cursorColor = MaterialTheme.colorScheme.primary
+                        )
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -220,6 +254,7 @@ fun MainScreen(
                             if (prompt.isNotBlank()) {
                                 viewModel.generateHtml(prompt)
                                 prompt = ""
+                                keyboardController?.hide()
                             }
                         },
                         modifier = Modifier.size(48.dp),

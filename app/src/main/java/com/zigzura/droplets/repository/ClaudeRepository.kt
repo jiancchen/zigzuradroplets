@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.first
 
 class ClaudeRepository(private val preferencesManager: PreferencesManager) {
 
-    suspend fun generateHtml(prompt: String): Result<String> {
+    suspend fun generateHtml(prompt: String, enableDebug: Boolean = false): Result<String> {
         return try {
             val apiKey = preferencesManager.apiKey.first()
             if (apiKey.isNullOrBlank()) {
@@ -49,83 +49,99 @@ class ClaudeRepository(private val preferencesManager: PreferencesManager) {
                 val claudeResponse = response.body()
                 val htmlContent = claudeResponse?.content?.firstOrNull()?.text ?: ""
 
-                // Save to history
+                // Check if the response contains a prompt rejection
+                if (htmlContent.contains("XPROMPTREJECTREASON")) {
+                    val rejectionReason = htmlContent.substringAfter("XPROMPTREJECTREASON:")
+                        .substringBefore("\n")
+                        .trim()
+
+                    Log.w("ClaudeRepository", "Prompt rejected: $rejectionReason")
+                    return Result.failure(Exception("PROMPT_REJECTED:$rejectionReason"))
+                }
+
+                // Save to history only if not rejected
                 preferencesManager.savePrompt(prompt, htmlContent)
 
-                // Create debug HTML with original content
-                val debugHtml = """
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <style>
-                            .debug-info {
-                                position: fixed;
-                                top: 0;
-                                left: 0;
-                                right: 0;
-                                background: rgba(0, 123, 255, 0.9);
-                                color: white;
-                                padding: 8px;
-                                font-family: monospace;
-                                font-size: 11px;
-                                z-index: 10000;
-                                max-height: 60px;
-                                overflow-y: auto;
-                                line-height: 1.2;
-                            }
-                            .debug-toggle {
-                                position: fixed;
-                                top: 5px;
-                                right: 5px;
-                                background: #dc3545;
-                                color: white;
-                                border: none;
-                                padding: 3px 8px;
-                                border-radius: 3px;
-                                font-size: 10px;
-                                z-index: 10001;
-                                cursor: pointer;
-                            }
-                            .original-content {
-                                /* Don't add top margin - let the original content handle its own layout */
-                                position: relative;
-                                z-index: 1;
-                            }
-                            /* Fix for content that uses 100vh */
-                            .original-content body {
-                                padding-top: 0 !important;
-                                margin-top: 0 !important;
-                            }
-                            /* Hide debug by default to avoid layout conflicts */
-                            .debug-info.hidden {
-                                display: none;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <button class="debug-toggle" onclick="toggleDebug()">🐛</button>
-                        <div class="debug-info hidden" id="debug-info">
-                            <strong>Debug:</strong> "${prompt.take(50).replace("\"", "\\\"")}" | ${htmlContent.length}chars | ${java.text.SimpleDateFormat("HH:mm:ss").format(java.util.Date())}
-                        </div>
-                        <div class="original-content">
-                            ${htmlContent}
-                        </div>
-                        <script>
-                            function toggleDebug() {
-                                var debug = document.getElementById('debug-info');
-                                debug.classList.toggle('hidden');
-                            }
-                            // Auto-hide debug after 3 seconds
-                            setTimeout(function() {
-                                document.getElementById('debug-info').classList.add('hidden');
-                            }, 3000);
-                        </script>
-                    </body>
-                    </html>
-                """.trimIndent()
+                // Return either debug HTML or original content based on flag
+                val finalHtml = if (enableDebug) {
+                    // Create debug HTML with original content
+                    """
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <style>
+                                .debug-info {
+                                    position: fixed;
+                                    top: 0;
+                                    left: 0;
+                                    right: 0;
+                                    background: rgba(0, 123, 255, 0.9);
+                                    color: white;
+                                    padding: 8px;
+                                    font-family: monospace;
+                                    font-size: 11px;
+                                    z-index: 10000;
+                                    max-height: 60px;
+                                    overflow-y: auto;
+                                    line-height: 1.2;
+                                }
+                                .debug-toggle {
+                                    position: fixed;
+                                    top: 5px;
+                                    right: 5px;
+                                    background: #dc3545;
+                                    color: white;
+                                    border: none;
+                                    padding: 3px 8px;
+                                    border-radius: 3px;
+                                    font-size: 10px;
+                                    z-index: 10001;
+                                    cursor: pointer;
+                                }
+                                .original-content {
+                                    /* Don't add top margin - let the original content handle its own layout */
+                                    position: relative;
+                                    z-index: 1;
+                                }
+                                /* Fix for content that uses 100vh */
+                                .original-content body {
+                                    padding-top: 0 !important;
+                                    margin-top: 0 !important;
+                                }
+                                /* Hide debug by default to avoid layout conflicts */
+                                .debug-info.hidden {
+                                    display: none;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <button class="debug-toggle" onclick="toggleDebug()">🐛</button>
+                            <div class="debug-info hidden" id="debug-info">
+                                <strong>Debug:</strong> "${prompt.take(50).replace("\"", "\\\"")}" | ${htmlContent.length}chars | ${java.text.SimpleDateFormat("HH:mm:ss").format(java.util.Date())}
+                            </div>
+                            <div class="original-content">
+                                ${htmlContent}
+                            </div>
+                            <script>
+                                function toggleDebug() {
+                                    var debug = document.getElementById('debug-info');
+                                    debug.classList.toggle('hidden');
+                                }
+                                // Auto-hide debug after 3 seconds
+                                setTimeout(function() {
+                                    document.getElementById('debug-info').classList.add('hidden');
+                                }, 3000);
+                            </script>
+                        </body>
+                        </html>
+                    """.trimIndent()
+                } else {
+                    // Return original HTML content without any debug wrapper
+                    htmlContent
+                }
 
-                Result.success(debugHtml)
+                Result.success(finalHtml)
             } else {
                 val errorBody = response.errorBody()?.string()
                 Log.e("ClaudeRepository", "API Error: ${response.code()} - ${response.message()}")

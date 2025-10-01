@@ -26,19 +26,29 @@ class MainViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private val _promptRejection = MutableStateFlow<String?>(null)
+    val promptRejection: StateFlow<String?> = _promptRejection.asStateFlow()
+
     val promptHistory = preferencesManager.promptHistory
 
-    fun generateHtml(prompt: String) {
+    fun generateHtml(prompt: String, enableDebug: Boolean = false) {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
+            _promptRejection.value = null
 
-            claudeRepository.generateHtml(prompt).fold(
+            claudeRepository.generateHtml(prompt, enableDebug).fold(
                 onSuccess = { html ->
                     _currentHtml.value = html
                 },
                 onFailure = { exception ->
-                    _error.value = exception.message ?: "Unknown error occurred"
+                    val errorMessage = exception.message ?: "Unknown error occurred"
+                    if (errorMessage.startsWith("PROMPT_REJECTED:")) {
+                        val rejectionReason = errorMessage.substringAfter("PROMPT_REJECTED:")
+                        _promptRejection.value = rejectionReason
+                    } else {
+                        _error.value = errorMessage
+                    }
                 }
             )
 
@@ -52,6 +62,10 @@ class MainViewModel @Inject constructor(
 
     fun clearError() {
         _error.value = null
+    }
+
+    fun clearPromptRejection() {
+        _promptRejection.value = null
     }
 
     fun clearHistory() {
