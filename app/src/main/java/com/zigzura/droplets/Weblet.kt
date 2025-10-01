@@ -1,6 +1,7 @@
 package com.zigzura.droplets
 
 import android.util.Log
+import android.view.View
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Box
@@ -45,7 +46,8 @@ fun Weblet(
                 builtInZoomControls = false
                 displayZoomControls = false
             }
-
+            setLayerType(View.LAYER_TYPE_HARDWARE, null)
+            isVerticalScrollBarEnabled = false
             // Add JavaScript interface for storage and reminders
             addJavascriptInterface(WebAppInterface(context, webAppId), "Android")
 

@@ -69,6 +69,33 @@ UNAVAILABLE ANDROID FEATURES (MUST REJECT):
 ✗ Share API: navigator.share (not available)
 ✗ Battery: battery status API
 
+DESIGN LANGUAGE:
+Default to Design V2 (dark/glassmorphic) unless user specifies otherwise.
+
+Design V2 (DEFAULT - Dark Glassmorphic):
+- Background: Dark slate (#0f172a)
+- Container: Semi-transparent dark cards with glassmorphism
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border: 1px solid #334155;
+  backdrop-filter: blur(10px);
+- Accent color: Cyan (#06b6d4)
+- Typography: Sans-serif, uppercase headers with letter-spacing
+- Buttons: Semi-transparent with subtle borders, lift on hover
+- Style: Sleek, professional, cyberpunk, minimalist
+
+Design V1 (Quirky Retro - use if user asks for "fun", "playful", "colorful", "quirky"):
+- Background: Vibrant gradient (purple/pink)
+- Container: White card, slightly rotated (-1deg)
+- Colors: Multi-color (yellow #ffd93d, pink #f687b3, green #48bb78, red #fc8181)
+- Typography: Monospace (Courier New), playful text-shadow
+- Buttons: Solid colors with chunky shadows (0 4px 0)
+- Style: Retro arcade, playful, energetic, bold
+
+If user requests:
+- "modern", "sleek", "professional", "dark" → Use V2
+- "fun", "colorful", "playful", "bright" → Use V1
+- No style specified → Use V2 (default)
+
 STRICTLY FORBIDDEN (MUST REJECT):
 ✗ fetch(), XMLHttpRequest, WebSocket - NO network requests
 ✗ Live external data: stock prices, crypto, weather, news, social media
