@@ -39,12 +39,15 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
-    suspend fun savePrompt(uuid: String, prompt: String, html: String, title: String = ""): PromptHistory {
+    suspend fun savePrompt(uuid: String, prompt: String, html: String, title: String = "", model: String = "claude-3-haiku-20240307"): PromptHistory {
         val newPrompt = PromptHistory(
             id = uuid, // Use the pre-generated UUID instead of timestamp
             prompt = prompt,
             html = html,
-            title = title
+            title = title,
+            version = 1,
+            accessCount = 0,
+            model = model
         )
 
         context.dataStore.edit { preferences ->

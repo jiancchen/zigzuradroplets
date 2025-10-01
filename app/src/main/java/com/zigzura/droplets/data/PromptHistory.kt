@@ -14,7 +14,15 @@ data class PromptHistory(
     @SerializedName("favorite")
     val favorite: Boolean? = false,
     @SerializedName("timestamp")
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    @SerializedName("lastUsed")
+    val lastUsed: Long? = null,
+    @SerializedName("version")
+    val version: Int? = 1,
+    @SerializedName("accessCount")
+    val accessCount: Int? = 0,
+    @SerializedName("model")
+    val model: String? = "claude-3-haiku-20240307"
 )
 
 data class ClaudeRequest(

@@ -70,7 +70,7 @@ class ClaudeRepository(private val preferencesManager: PreferencesManager) {
                 }
 
                 // Save to history using the pre-generated UUID
-                val promptHistory = preferencesManager.savePrompt(uuid, prompt, htmlContent)
+                val promptHistory = preferencesManager.savePrompt(uuid, prompt, htmlContent, model = request.model)
 
                 // Return either debug HTML or original content based on flag
                 val finalHtml = if (enableDebug) {

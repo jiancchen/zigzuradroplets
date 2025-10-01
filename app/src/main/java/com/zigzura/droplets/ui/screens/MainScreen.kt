@@ -276,10 +276,11 @@ fun MainScreen(
                         .weight(1f, fill = false)
                         .heightIn(min = 200.dp)
                 ) {
-                    if (currentHtml.isNotEmpty()) {
+                    val historyItem = currentHistoryItem
+                    if (currentHtml.isNotEmpty() && historyItem != null) {
                         Weblet(
                             htmlContent = currentHtml,
-                            appId = currentHistoryItem!!.id
+                            appId = historyItem.id
                         )
                     } else {
                         // Placeholder when no HTML is loaded
