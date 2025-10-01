@@ -51,88 +51,34 @@ fun Weblet(
             setBackgroundColor(0x00000000)
             setLayerType(View.LAYER_TYPE_HARDWARE, null)
             isVerticalScrollBarEnabled = false
-            // Add JavaScript interface for storage and reminders
+            // Add JavaScript interface for storage and reminders - initial setup
             addJavascriptInterface(WebAppInterface(context, webAppId), "Android")
 
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
                     Log.d("Weblet", "Page finished loading for appId: $webAppId")
-
-                    // Inject JavaScript helper functions to make storage easier to use
-//                    val jsHelpers = """
-//                        javascript:(function() {
-//                            // Create convenient global functions for storage
-//                            window.saveData = function(key, value) {
-//                                window.androidInterface.saveData(key, typeof value === 'string' ? value : JSON.stringify(value));
-//                            };
-//
-//                            window.loadData = function(key, defaultValue = null) {
-//                                const data = window.androidInterface.loadData(key);
-//                                if (!data) return defaultValue;
-//                                try {
-//                                    return JSON.parse(data);
-//                                } catch (e) {
-//                                    return data; // Return as string if not valid JSON
-//                                }
-//                            };
-//
-//                            window.deleteData = function(key) {
-//                                window.androidInterface.deleteData(key);
-//                            };
-//
-//                            window.getAllData = function() {
-//                                return JSON.parse(window.androidInterface.getAllData());
-//                            };
-//
-//                            // Reminder functions
-//                            window.setReminder = function(reminderId, timeMillis, title, message) {
-//                                window.androidInterface.setReminder(reminderId, timeMillis, title, message);
-//                            };
-//
-//                            window.cancelReminder = function(reminderId) {
-//                                window.androidInterface.cancelReminder(reminderId);
-//                            };
-//
-//                            window.getReminders = function() {
-//                                return JSON.parse(window.androidInterface.getReminders());
-//                            };
-//
-//                            // Utility functions
-//                            window.showToast = function(message) {
-//                                window.androidInterface.showToast(message);
-//                            };
-//
-//                            // Legacy Android object for compatibility with existing HTML
-//                            window.Android = {
-//                                saveData: window.saveData,
-//                                loadData: function(key) {
-//                                    const data = window.androidInterface.loadData(key);
-//                                    return data || null;
-//                                },
-//                                deleteData: window.deleteData,
-//                                getAllData: window.getAllData,
-//                                setReminder: window.setReminder,
-//                                cancelReminder: window.cancelReminder,
-//                                getReminders: window.getReminders,
-//                                showToast: window.showToast
-//                            };
-//
-//                            console.log('Droplets WebApp Interface loaded for app:', window.androidInterface.getCurrentAppId());
-//                        })();
-//                    """.trimIndent()
-//
-//                    view?.evaluateJavascript(jsHelpers, null)
                 }
             }
         }
     }
 
-    // Load content when parameters change
-    LaunchedEffect(htmlContent, url) {
+    // Update WebAppInterface and load content when appId or content changes
+    LaunchedEffect(webAppId, htmlContent, url) {
+        Log.d("Weblet", "Updating WebAppInterface for appId: $webAppId")
+
+        // FIRST: Update the WebAppInterface
+        try {
+            webView.removeJavascriptInterface("Android")
+        } catch (e: Exception) {
+            // Ignore if removeJavascriptInterface is not available
+        }
+        webView.addJavascriptInterface(WebAppInterface(context, webAppId), "Android")
+
+        // THEN: Load the content (ensuring the interface is ready)
         when {
             !htmlContent.isNullOrBlank() -> {
-                Log.d("Weblet", "Loading HTML content: ${htmlContent.take(100)}...")
+                Log.d("Weblet", "Loading HTML content for appId: $webAppId")
                 webView.loadDataWithBaseURL(
                     "https://localhost/",
                     htmlContent,
@@ -142,7 +88,7 @@ fun Weblet(
                 )
             }
             !url.isNullOrBlank() -> {
-                Log.d("Weblet", "Loading URL: $url")
+                Log.d("Weblet", "Loading URL: $url for appId: $webAppId")
                 webView.loadUrl(url)
             }
             else -> {
