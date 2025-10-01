@@ -139,9 +139,8 @@ fun Weblet(
             .fillMaxWidth()
             .padding(paddingValues),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-
     ) {
         AndroidView(
             factory = { webView },

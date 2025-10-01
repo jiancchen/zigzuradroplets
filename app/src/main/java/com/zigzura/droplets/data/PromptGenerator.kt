@@ -245,6 +245,207 @@ CRITICAL: Output ONLY the HTML. Do not wrap in markdown. Do not explain.
 
 User request: """
 
+    private  val PROP_FORMAT2 = """Generate single-file HTML app for Android WebView. Vanilla JS, NO frameworks (React/Vue/etc).
+OUTPUT FORMAT:
+Respond with ONLY the complete HTML code. No explanations, no markdown code blocks, no commentary.
+Start with <!DOCTYPE html> and end with </html>. Nothing before or after.
+REQUIRED META TAG:
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+=== LAYOUT SYSTEM ===
+CORE LAYOUT RULES (ALWAYS FOLLOW):
+
+html, body: height: 100%; overflow: hidden; margin: 0; padding: 0; background: transparent;
+.container: height: 100%; overflow: hidden; width: 100%; display: flex; flex-direction: column;
+Main page NEVER scrolls - only isolated child divs scroll
+Use 100% for heights (NOT 100vh) - respects native Android container padding
+
+LAYOUT PATTERNS:
+Pattern A - Static Apps (calculators, forms, converters):
+.container {
+height: 100%;
+overflow: hidden;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+.content {
+/* auto height, centered */
+}
+Pattern B - Dynamic List Apps (todos, notes, trackers, feeds):
+.container {
+height: 100%;
+overflow: hidden;
+display: flex;
+flex-direction: column;
+}
+.header {
+/* fixed header /
+}
+.list-container {
+flex: 1;
+overflow-y: auto;
+/ ONLY this scrolls /
+}
+.footer {
+/ fixed footer */
+}
+MOBILE DESIGN:
+
+Portrait phones: 360-400px width typical
+Font size ≥16px (prevents zoom on input)
+Touch targets ≥44px minimum
+Padding: 20px on containers
+Box model: * { box-sizing: border-box; }
+Text wrapping: word-wrap: break-word;
+No elements exceed container width
+
+=== STYLING ===
+Design Language: Neo-Brutalist Peach (default unless user specifies otherwise)
+COLORS:
+
+Primary gradient: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 50%, #ff9ff3 100%)
+Accent green: linear-gradient(135deg, #00b894, #00cec9)
+Accent coral: linear-gradient(135deg, #ff7675, #fd79a8)
+Accent mint: linear-gradient(135deg, #55efc4, #81ecec)
+Text dark: #2d3436
+Muted text: #636e72
+Completed bg: #dfe6e9
+
+CONTAINER STYLING:
+
+Background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 50%, #ff9ff3 100%)
+Border-radius: 32px
+Padding: 32px 24px
+
+TYPOGRAPHY:
+
+Headers: font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #2d3436;
+Body: font-weight: 700; color: #2d3436;
+Subtitles: font-weight: 600; letter-spacing: 1px; opacity: 0.6;
+
+BUTTONS & INPUTS:
+
+Border: 4px solid #2d3436; border-radius: 24px;
+Buttons: Gradient backgrounds, box-shadow: 5px 5px 0 #2d3436;
+Hover: transform: translate(-2px, -2px); box-shadow: 7px 7px 0 #2d3436;
+Active: transform: translate(2px, 2px); box-shadow: 3px 3px 0 #2d3436;
+Input focus: transform: translateY(-2px); box-shadow: 6px 6px 0 rgba(45,52,54,0.2);
+Min height: 44px
+
+CARDS/ITEMS:
+
+Background: white; border: 4px solid #2d3436; border-radius: 24px;
+Shadow: box-shadow: 5px 5px 0 rgba(45,52,54,0.3);
+Hover: translate(-2px, -2px) + stronger shadow
+Completed: background: #dfe6e9; border-color: #95a5a6; text-decoration: line-through;
+
+INTERACTIONS:
+
+Transitions: 0.15-0.2s
+Use transform for animations (NOT margin/position)
+Hover: lift up, Active: push down
+
+ALTERNATIVE STYLES:
+
+User says "modern/sleek/professional/dark" → Use V2 style
+User says "fun/colorful/playful/bright" → Use V1 style
+No style specified → Use Neo-Brutalist Peach (default)
+
+=== ANDROID FEATURES ===
+AVAILABLE (USE THESE):
+✓ Storage:
+Android.saveData(key, value) - save string
+Android.loadData(key) - load string
+Android.getAllData() - get all keys object
+Android.deleteData(key) - delete key
+✓ Reminders:
+Android.setReminder(id, milliseconds, title, message)
+Android.cancelReminder(id)
+Android.getReminders() - get all reminders
+JAVASCRIPT PATTERNS:
+
+Always check: if(typeof Android !== 'undefined') {...}
+Load specific key: const data = Android.loadData('mykey');
+Parse after loading: if(data) { items = JSON.parse(data); }
+Save with JSON: Android.saveData('mykey', JSON.stringify(items));
+Track keys used for later deletion
+
+UNAVAILABLE (MUST REJECT):
+✗ Camera/Photos/File uploads
+✗ Microphone/Audio recording
+✗ Geolocation/GPS
+✗ Device sensors (accelerometer, gyroscope)
+✗ Contacts/Calendar/SMS/Phone
+✗ File system access
+✗ Bluetooth/NFC
+✗ Push notifications (use Android.setReminder instead)
+✗ Biometrics
+✗ Vibration
+✗ Share API
+✗ Clipboard read
+✗ localStorage/sessionStorage (use Android.saveData)
+✗ Network requests (fetch/XMLHttpRequest/WebSocket)
+✗ Live external data
+✗ Service Workers
+=== LIBRARIES ===
+ALLOWED CDN IMPORTS:
+✓ Three.js: https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js
+✓ Chart.js: https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js
+✓ D3.js: https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js
+✓ Tone.js: https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js
+✓ Math.js: https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js
+✓ Bootstrap CSS: https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css
+✓ Google Fonts: https://fonts.googleapis.com
+=== APP TYPES ===
+APPS THAT WORK:
+✓ 3D graphics/games (Three.js)
+✓ Charts with demo data (Chart.js)
+✓ Canvas drawing/painting
+✓ Audio synthesis (Tone.js - no recording)
+✓ Calculators/converters/utilities
+✓ Timers/stopwatches/alarms
+✓ Notes/todos/trackers (with Android.saveData)
+✓ Offline games (tic-tac-toe, snake, puzzles)
+✓ Random generators
+✓ Simulators with demo/fake data
+✓ Text editors
+✓ Animations/particle effects
+✓ Math/science visualizations
+✓ Color pickers/pixel art editors
+APPS THAT DON'T WORK (with alternatives):
+✗ Photo editor → Suggest: Drawing app or color filter simulator
+✗ QR/Barcode scanner → Suggest: QR/Barcode generator
+✗ Voice recorder → Suggest: Audio synthesizer (Tone.js)
+✗ GPS tracker → Suggest: Compass simulator or distance calculator
+✗ Step counter → Suggest: Manual activity logger
+✗ Camera app → Suggest: Drawing app with brush tools
+✗ File manager → Suggest: Text document viewer (in-app only)
+✗ Live stocks/weather → Suggest: Stock/weather simulator with demo data
+✗ Social media with uploads → Suggest: Text-based post designer
+✗ Device music player → Suggest: Music synthesizer
+REJECTION PROTOCOL:
+If unavailable features requested, respond with ONLY:
+XPROMPTREJECTREASON: [Feature] requires [capability]. Suggestion: [alternative].
+Example:
+XPROMPTREJECTREASON: Camera access unavailable. Suggestion: Drawing app with brush tools and color palette.
+=== REQUIREMENTS ===
+FUNCTIONAL:
+✓ Complete working code (no TODOs/placeholders)
+✓ All features fully functional on first load
+✓ Apps with lists MUST have: add, edit (if applicable), delete, persist
+✓ Data persists with Android.saveData/loadData
+✓ Single-page only (use modals/overlays for secondary content)
+✓ Use realistic demo data when needed
+TECHNICAL:
+✓ All CSS inline in <style>
+✓ All JS inline in <script>
+✓ Box-sizing: border-box on all elements
+✓ No horizontal overflow
+✓ Beautiful, polished mobile UI
+✓ Works immediately without setup
+CRITICAL: Output ONLY the HTML. Do not wrap in markdown. Do not explain.
+User request: """
+
     fun generatePrompt(userInput: String): String {
         return PROP_FORMAT + userInput
     }
