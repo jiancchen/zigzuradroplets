@@ -9,6 +9,10 @@ data class PromptHistory(
     val prompt: String,
     @SerializedName("html")
     val html: String,
+    @SerializedName("title")
+    val title: String? = "",
+    @SerializedName("favorite")
+    val favorite: Boolean? = false,
     @SerializedName("timestamp")
     val timestamp: Long = System.currentTimeMillis()
 )

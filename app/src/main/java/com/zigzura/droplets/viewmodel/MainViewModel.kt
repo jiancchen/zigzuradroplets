@@ -92,4 +92,16 @@ class MainViewModel @Inject constructor(
             preferencesManager.clearHistory()
         }
     }
+
+    fun toggleFavorite(id: String) {
+        viewModelScope.launch {
+            preferencesManager.toggleFavorite(id)
+        }
+    }
+
+    fun updateTitle(id: String, title: String) {
+        viewModelScope.launch {
+            preferencesManager.updateTitle(id, title)
+        }
+    }
 }

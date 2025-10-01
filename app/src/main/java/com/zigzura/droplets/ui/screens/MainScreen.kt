@@ -12,6 +12,9 @@ import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -47,9 +50,19 @@ fun MainScreen(
 
     var prompt by remember { mutableStateOf("") }
     var showSettingsMenu by remember { mutableStateOf(false) }
+    var showFavoritesOnly by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    // Filter history based on favorites toggle
+    val filteredHistory = remember(promptHistory, showFavoritesOnly) {
+        if (showFavoritesOnly) {
+            promptHistory.filter { it.favorite == true }
+        } else {
+            promptHistory
+        }
+    }
 
     // Show error snackbar
     error?.let { errorMessage ->
@@ -145,6 +158,28 @@ fun MainScreen(
                             Text("Clear All History")
                         }
 
+                        // Favorites Toggle
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = showFavoritesOnly,
+                                onCheckedChange = { showFavoritesOnly = it },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = MaterialTheme.colorScheme.primary,
+                                    uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Show favorites only",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+
                         HorizontalDivider()
 
                         // History List
@@ -153,12 +188,18 @@ fun MainScreen(
                             contentPadding = PaddingValues(8.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            items(promptHistory) { historyItem ->
+                            items(filteredHistory) { historyItem ->
                                 HistoryItem(
                                     historyItem = historyItem,
                                     onClick = {
                                         viewModel.loadHistoryItem(historyItem)
                                         scope.launch { drawerState.close() }
+                                    },
+                                    onToggleFavorite = { id ->
+                                        viewModel.toggleFavorite(id)
+                                    },
+                                    onUpdateTitle = { id, title ->
+                                        viewModel.updateTitle(id, title)
                                     }
                                 )
                             }
@@ -366,32 +407,152 @@ fun MainScreen(
 @Composable
 fun HistoryItem(
     historyItem: PromptHistory,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onToggleFavorite: (String) -> Unit = {},
+    onUpdateTitle: (String, String) -> Unit = { _, _ -> }
 ) {
+    var showTitleDialog by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 2.dp),
         onClick = onClick,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = if (historyItem.favorite == true)
+                MaterialTheme.colorScheme.primaryContainer
+            else
+                MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(
-                text = historyItem.prompt,
-                fontWeight = FontWeight.Medium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                fontSize = 14.sp
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
-                    .format(Date(historyItem.timestamp)),
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            // Title or Prompt
+            if (!historyItem.title.isNullOrEmpty()) {
+                Text(
+                    text = historyItem.title,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = if (historyItem.favorite == true)
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    else
+                        MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = historyItem.prompt,
+                    fontSize = 14.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    color = if (historyItem.favorite == true)
+                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Text(
+                    text = historyItem.prompt,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    fontSize = 14.sp,
+                    color = if (historyItem.favorite == true)
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    else
+                        MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Bottom row with date and actions
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
+                        .format(Date(historyItem.timestamp)),
+                    fontSize = 12.sp,
+                    color = if (historyItem.favorite == true)
+                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Row {
+                    // Edit title button
+                    IconButton(
+                        onClick = {
+                            showTitleDialog = true
+                        },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = "Edit title",
+                            tint = if (historyItem.favorite == true)
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
+                    // Favorite button
+                    IconButton(
+                        onClick = { onToggleFavorite(historyItem.id) },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            if (historyItem.favorite == true) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = if (historyItem.favorite == true) "Remove from favorites" else "Add to favorites",
+                            tint = if (historyItem.favorite == true)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
         }
+    }
+
+    // Title edit dialog
+    if (showTitleDialog) {
+        var titleText by remember { mutableStateOf(historyItem.title ?: "") }
+
+        AlertDialog(
+            onDismissRequest = { showTitleDialog = false },
+            title = { Text("Edit Title") },
+            text = {
+                OutlinedTextField(
+                    value = titleText,
+                    onValueChange = { titleText = it },
+                    label = { Text("Title") },
+                    placeholder = { Text("Enter a title for this prompt...") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onUpdateTitle(historyItem.id, titleText.trim())
+                        showTitleDialog = false
+                    }
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showTitleDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
