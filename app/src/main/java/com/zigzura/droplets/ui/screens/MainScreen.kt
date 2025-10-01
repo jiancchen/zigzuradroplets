@@ -23,7 +23,8 @@ import com.zigzura.droplets.viewmodel.MainViewModel
 @Composable
 fun MainScreen(
     onNavigateToSignup: () -> Unit,
-    onNavigateToDebug: () -> Unit
+    onNavigateToDebug: () -> Unit,
+    onNavigateToAppView: (String) -> Unit = {}
 ) {
     val viewModel: MainViewModel = hiltViewModel()
     val currentHtml by viewModel.currentHtml.collectAsState()
@@ -45,6 +46,17 @@ fun MainScreen(
             promptHistory.filter { it.favorite == true }
         } else {
             promptHistory
+        }
+    }
+
+    // Navigate to newly created app
+    LaunchedEffect(currentHistoryItem) {
+        currentHistoryItem?.let { item ->
+            // If we have a current item and we're on the create tab, navigate to it
+            if (selectedTab == 1 && currentHtml.isNotEmpty()) {
+                onNavigateToAppView(item.id)
+                selectedTab = 0 // Switch back to My Apps tab
+            }
         }
     }
 
@@ -153,7 +165,7 @@ fun MainScreen(
                     showFavoritesOnly = showFavoritesOnly,
                     onShowFavoritesToggle = { showFavoritesOnly = it },
                     onHistoryItemClick = { historyItem ->
-                        viewModel.loadHistoryItem(historyItem)
+                        onNavigateToAppView(historyItem.id)
                     },
                     onToggleFavorite = { id ->
                         viewModel.toggleFavorite(id)
@@ -163,10 +175,7 @@ fun MainScreen(
                     },
                     onClearHistory = {
                         viewModel.clearHistory()
-                    },
-                    currentHistoryItem = currentHistoryItem,
-                    currentHtml = currentHtml,
-                    isLoading = isLoading
+                    }
                 )
 
                 1 -> CreateScreen(
@@ -178,6 +187,9 @@ fun MainScreen(
                             prompt = ""
                             keyboardController?.hide()
                         }
+                    },
+                    onAppCreated = { appId ->
+                        onNavigateToAppView(appId)
                     },
                     isLoading = isLoading
                 )

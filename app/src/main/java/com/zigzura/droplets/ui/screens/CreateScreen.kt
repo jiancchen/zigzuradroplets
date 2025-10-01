@@ -20,6 +20,7 @@ fun CreateScreen(
     prompt: String,
     onPromptChange: (String) -> Unit,
     onSubmit: () -> Unit,
+    onAppCreated: (String) -> Unit = {},
     isLoading: Boolean
 ) {
     Column(

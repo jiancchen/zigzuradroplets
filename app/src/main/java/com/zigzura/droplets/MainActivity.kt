@@ -12,12 +12,20 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.navigation.NavType
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import com.zigzura.droplets.navigation.Screen
+import com.zigzura.droplets.ui.screens.AppViewScreen
 import com.zigzura.droplets.ui.screens.DebugScreen
 import com.zigzura.droplets.ui.screens.MainScreen
 import com.zigzura.droplets.ui.screens.SignupScreen
 import com.zigzura.droplets.ui.screens.SplashScreen
 import com.zigzura.droplets.ui.theme.DropletsTheme
+import com.zigzura.droplets.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -78,6 +86,9 @@ fun DropletsNavigation() {
                 },
                 onNavigateToDebug = {
                     navController.navigate(Screen.Debug.route)
+                },
+                onNavigateToAppView = { appId ->
+                    navController.navigate(Screen.AppView.createRoute(appId))
                 }
             )
         }
@@ -88,6 +99,41 @@ fun DropletsNavigation() {
                     navController.popBackStack()
                 }
             )
+        }
+
+        composable(
+            route = Screen.AppView.route,
+            arguments = listOf(navArgument("appId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val appId = backStackEntry.arguments?.getString("appId") ?: return@composable
+            val viewModel: MainViewModel = hiltViewModel()
+            val promptHistory by viewModel.promptHistory.collectAsState(initial = emptyList())
+            val currentHtml by viewModel.currentHtml.collectAsState()
+
+            val historyItem = promptHistory.find { it.id == appId }
+
+            if (historyItem != null) {
+                // Load the app if not already loaded
+                LaunchedEffect(appId) {
+                    if (currentHtml.isEmpty() || viewModel.currentHistoryItem.value?.id != appId) {
+                        viewModel.loadHistoryItem(historyItem)
+                    }
+                }
+
+                AppViewScreen(
+                    historyItem = historyItem,
+                    htmlContent = currentHtml,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onToggleFavorite = { id ->
+                        viewModel.toggleFavorite(id)
+                    },
+                    onUpdateTitle = { id, title ->
+                        viewModel.updateTitle(id, title)
+                    }
+                )
+            }
         }
     }
 }

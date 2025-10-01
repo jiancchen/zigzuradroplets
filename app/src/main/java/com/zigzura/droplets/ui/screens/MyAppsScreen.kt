@@ -11,7 +11,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.zigzura.droplets.Weblet
 import com.zigzura.droplets.data.PromptHistory
 import com.zigzura.droplets.ui.components.HistoryItem
 
@@ -23,31 +22,11 @@ fun MyAppsScreen(
     onHistoryItemClick: (PromptHistory) -> Unit,
     onToggleFavorite: (String) -> Unit,
     onUpdateTitle: (String, String) -> Unit,
-    onClearHistory: () -> Unit,
-    currentHistoryItem: PromptHistory?,
-    currentHtml: String,
-    isLoading: Boolean
+    onClearHistory: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Current App Display
-        if (currentHtml.isNotEmpty() && currentHistoryItem != null) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp)
-                    .padding(bottom = 16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-            ) {
-                Weblet(
-                    htmlContent = currentHtml,
-                    appId = currentHistoryItem.id
-                )
-            }
-        }
-
         // Filters and Controls
         if (promptHistory.isNotEmpty()) {
             Row(
