@@ -4,6 +4,7 @@ import android.util.Log
 import android.view.View
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -192,12 +193,15 @@ fun Weblet(
             .fillMaxWidth()
             .padding(paddingValues),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+
     ) {
         AndroidView(
             factory = { webView },
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color.Transparent)
                 .clip(RoundedCornerShape(16.dp)),
             update = { view ->
                 Log.d("Weblet", "AndroidView update called")

@@ -107,8 +107,7 @@ CONTAINER:
   background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 50%, #ff9ff3 100%);
   border-radius: 32px;
   padding: 32px 24px;
-- Add decorative floating orbs with pseudo-elements for depth
-
+  
 TYPOGRAPHY:
 - Headers: font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #2d3436;
 - Body text: font-weight: 700; color: #2d3436;
