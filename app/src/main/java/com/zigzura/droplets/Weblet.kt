@@ -17,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -46,6 +47,7 @@ fun Weblet(
                 builtInZoomControls = false
                 displayZoomControls = false
             }
+            setBackgroundColor(0x00000000)
             setLayerType(View.LAYER_TYPE_HARDWARE, null)
             isVerticalScrollBarEnabled = false
             // Add JavaScript interface for storage and reminders
