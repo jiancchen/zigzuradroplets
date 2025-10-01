@@ -39,17 +39,17 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
-    suspend fun savePrompt(prompt: String, html: String) {
+    suspend fun savePrompt(uuid: String, prompt: String, html: String): PromptHistory {
+        val newPrompt = PromptHistory(
+            id = uuid, // Use the pre-generated UUID instead of timestamp
+            prompt = prompt,
+            html = html
+        )
+
         context.dataStore.edit { preferences ->
             val currentJson = preferences[PROMPT_HISTORY] ?: "[]"
             val type = object : TypeToken<List<PromptHistory>>() {}.type
             val currentList: MutableList<PromptHistory> = gson.fromJson(currentJson, type) ?: mutableListOf()
-
-            val newPrompt = PromptHistory(
-                id = System.currentTimeMillis().toString(),
-                prompt = prompt,
-                html = html
-            )
 
             currentList.add(0, newPrompt) // Add to beginning
 
@@ -60,6 +60,8 @@ class PreferencesManager(private val context: Context) {
 
             preferences[PROMPT_HISTORY] = gson.toJson(currentList)
         }
+
+        return newPrompt // Return the created PromptHistory with the UUID
     }
 
     suspend fun clearApiKey() {

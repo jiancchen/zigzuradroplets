@@ -13,6 +13,8 @@ REQUIRED META TAG:
 
 MOBILE DESIGN:
 - Center content for portrait phones (360-400px width typical)
+- Use min-height: 100vh (NOT height: 100vh) to prevent viewport cutoff
+- For body/container: flex with min-height allows proper scrolling
 - Use flexbox/grid for layout
 - Font size ≥16px (prevents zoom on input)
 - Touch targets ≥44px
@@ -39,7 +41,14 @@ AVAILABLE ANDROID FEATURES (ONLY THESE):
   Android.cancelReminder(id) - cancel reminder
   Android.getReminders()→JSON - list reminders
 
-Check availability: if(typeof Android!=='undefined'){...}
+CRITICAL JAVASCRIPT PATTERNS:
+
+✓ Always check Android availability: if(typeof Android!=='undefined'){...}
+✓ Load data on page load:
+  if (typeof Android !== 'undefined') {
+    loadStoredData();
+  }
+✓ When saving, track the KEY used so you can delete with the SAME key later
 
 UNAVAILABLE ANDROID FEATURES (MUST REJECT):
 ✗ Camera/Photos: navigator.mediaDevices, getUserMedia, <input type="file" accept="image/*">, camera access

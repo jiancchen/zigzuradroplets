@@ -6,12 +6,22 @@ import com.zigzura.droplets.data.ClaudeMessage
 import com.zigzura.droplets.data.ClaudeRequest
 import com.zigzura.droplets.data.PreferencesManager
 import com.zigzura.droplets.data.PromptGenerator
+import com.zigzura.droplets.data.PromptHistory
 import kotlinx.coroutines.flow.first
+import java.util.UUID
+
+data class HtmlGenerationResult(
+    val html: String,
+    val promptHistory: PromptHistory
+)
 
 class ClaudeRepository(private val preferencesManager: PreferencesManager) {
 
-    suspend fun generateHtml(prompt: String, enableDebug: Boolean = false): Result<String> {
+    suspend fun generateHtml(prompt: String, enableDebug: Boolean = false): Result<HtmlGenerationResult> {
         return try {
+            // Generate UUID at the very beginning of the request
+            val uuid = UUID.randomUUID().toString()
+
             val apiKey = preferencesManager.apiKey.first()
             if (apiKey.isNullOrBlank()) {
                 return Result.failure(Exception("API key not found"))
@@ -59,8 +69,8 @@ class ClaudeRepository(private val preferencesManager: PreferencesManager) {
                     return Result.failure(Exception("PROMPT_REJECTED:$rejectionReason"))
                 }
 
-                // Save to history only if not rejected
-                preferencesManager.savePrompt(prompt, htmlContent)
+                // Save to history using the pre-generated UUID
+                val promptHistory = preferencesManager.savePrompt(uuid, prompt, htmlContent)
 
                 // Return either debug HTML or original content based on flag
                 val finalHtml = if (enableDebug) {
@@ -141,7 +151,7 @@ class ClaudeRepository(private val preferencesManager: PreferencesManager) {
                     htmlContent
                 }
 
-                Result.success(finalHtml)
+                Result.success(HtmlGenerationResult(finalHtml, promptHistory))
             } else {
                 val errorBody = response.errorBody()?.string()
                 Log.e("ClaudeRepository", "API Error: ${response.code()} - ${response.message()}")

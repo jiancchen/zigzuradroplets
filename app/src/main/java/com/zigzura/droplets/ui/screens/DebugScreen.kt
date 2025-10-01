@@ -163,7 +163,7 @@ fun DebugScreen(
                         .fillMaxWidth()
                         .weight(1f)
                 ) {
-                    Weblet(htmlContent = currentHtml)
+                    Weblet(htmlContent = currentHtml, appId = "test_app")
                 }
             }
         }

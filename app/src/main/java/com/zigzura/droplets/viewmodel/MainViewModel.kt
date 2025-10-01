@@ -20,6 +20,9 @@ class MainViewModel @Inject constructor(
     private val _currentHtml = MutableStateFlow("")
     val currentHtml: StateFlow<String> = _currentHtml.asStateFlow()
 
+    private val _currentHistoryItem = MutableStateFlow<PromptHistory?>(null)
+    val currentHistoryItem: StateFlow<PromptHistory?> = _currentHistoryItem.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -36,10 +39,12 @@ class MainViewModel @Inject constructor(
             _isLoading.value = true
             _error.value = null
             _promptRejection.value = null
+            _currentHistoryItem.value = null // Clear history item when generating new HTML
 
             claudeRepository.generateHtml(prompt, enableDebug).fold(
-                onSuccess = { html ->
-                    _currentHtml.value = html
+                onSuccess = { result ->
+                    _currentHtml.value = result.html
+                    _currentHistoryItem.value = result.promptHistory // Immediately set the PromptHistory with its ID
                 },
                 onFailure = { exception ->
                     val errorMessage = exception.message ?: "Unknown error occurred"
@@ -58,6 +63,7 @@ class MainViewModel @Inject constructor(
 
     fun loadHistoryItem(historyItem: PromptHistory) {
         _currentHtml.value = historyItem.html
+        _currentHistoryItem.value = historyItem // Track the loaded history item
     }
 
     fun clearError() {

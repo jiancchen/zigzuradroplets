@@ -34,6 +34,7 @@ fun MainScreen(
 ) {
     val viewModel: MainViewModel = hiltViewModel()
     val currentHtml by viewModel.currentHtml.collectAsState()
+    val currentHistoryItem by viewModel.currentHistoryItem.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     val promptRejection by viewModel.promptRejection.collectAsState()
@@ -178,7 +179,8 @@ fun MainScreen(
             ) {
                 if (currentHtml.isNotEmpty()) {
                     Weblet(
-                        htmlContent = currentHtml
+                        htmlContent = currentHtml,
+                        appId = currentHistoryItem!!.id // Now guaranteed to exist - no fallback needed
                     )
                 } else {
                     // Placeholder when no HTML is loaded

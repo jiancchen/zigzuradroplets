@@ -19,10 +19,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import java.util.UUID
+import java.security.MessageDigest
 
 @Composable
-fun Weblet(paddingValues: PaddingValues = PaddingValues(0.dp), url: String? = null, htmlContent: String? = null) {
+fun Weblet(
+    paddingValues: PaddingValues = PaddingValues(0.dp),
+    url: String? = null,
+    htmlContent: String? = null,
+    appId: String // Required - no fallback needed since PromptHistory always has an ID
+) {
     val context = LocalContext.current
+
+    // Use the provided appId directly - no fallback needed
+    val webAppId = remember(appId) { appId }
 
     // Create WebView with proper configuration
     val webView = remember {
@@ -36,10 +46,78 @@ fun Weblet(paddingValues: PaddingValues = PaddingValues(0.dp), url: String? = nu
                 displayZoomControls = false
             }
 
+            // Add JavaScript interface for storage and reminders
+            addJavascriptInterface(WebAppInterface(context, webAppId), "Android")
+
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
-                    Log.d("Weblet", "Page finished loading")
+                    Log.d("Weblet", "Page finished loading for appId: $webAppId")
+
+                    // Inject JavaScript helper functions to make storage easier to use
+//                    val jsHelpers = """
+//                        javascript:(function() {
+//                            // Create convenient global functions for storage
+//                            window.saveData = function(key, value) {
+//                                window.androidInterface.saveData(key, typeof value === 'string' ? value : JSON.stringify(value));
+//                            };
+//
+//                            window.loadData = function(key, defaultValue = null) {
+//                                const data = window.androidInterface.loadData(key);
+//                                if (!data) return defaultValue;
+//                                try {
+//                                    return JSON.parse(data);
+//                                } catch (e) {
+//                                    return data; // Return as string if not valid JSON
+//                                }
+//                            };
+//
+//                            window.deleteData = function(key) {
+//                                window.androidInterface.deleteData(key);
+//                            };
+//
+//                            window.getAllData = function() {
+//                                return JSON.parse(window.androidInterface.getAllData());
+//                            };
+//
+//                            // Reminder functions
+//                            window.setReminder = function(reminderId, timeMillis, title, message) {
+//                                window.androidInterface.setReminder(reminderId, timeMillis, title, message);
+//                            };
+//
+//                            window.cancelReminder = function(reminderId) {
+//                                window.androidInterface.cancelReminder(reminderId);
+//                            };
+//
+//                            window.getReminders = function() {
+//                                return JSON.parse(window.androidInterface.getReminders());
+//                            };
+//
+//                            // Utility functions
+//                            window.showToast = function(message) {
+//                                window.androidInterface.showToast(message);
+//                            };
+//
+//                            // Legacy Android object for compatibility with existing HTML
+//                            window.Android = {
+//                                saveData: window.saveData,
+//                                loadData: function(key) {
+//                                    const data = window.androidInterface.loadData(key);
+//                                    return data || null;
+//                                },
+//                                deleteData: window.deleteData,
+//                                getAllData: window.getAllData,
+//                                setReminder: window.setReminder,
+//                                cancelReminder: window.cancelReminder,
+//                                getReminders: window.getReminders,
+//                                showToast: window.showToast
+//                            };
+//
+//                            console.log('Droplets WebApp Interface loaded for app:', window.androidInterface.getCurrentAppId());
+//                        })();
+//                    """.trimIndent()
+//
+//                    view?.evaluateJavascript(jsHelpers, null)
                 }
             }
         }
@@ -108,7 +186,7 @@ fun Weblet(paddingValues: PaddingValues = PaddingValues(0.dp), url: String? = nu
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(paddingValues),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
