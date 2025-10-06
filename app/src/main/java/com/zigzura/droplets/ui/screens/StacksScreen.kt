@@ -187,18 +187,20 @@ fun Scrollable3DStack(
             ) {
                 // Background card (colorful offset) - skip for distant items during fast scroll
                 if (!useSimplifiedGraphics) {
-                    ThreeDImageCard(
-                        historyItem = item,
-                        rotationX = rotationX,
-                        rotationY = rotationY,
-                        backgroundColor = backgroundColors[index],
+                    // Simple colored background card without image
+                    Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .graphicsLayer {
+                                this.rotationX = rotationX
+                                this.rotationY = rotationY
+                                cameraDistance = 12 * density
                                 this.translationY = translationY + 8f
                                 this.translationX = 6f
                                 this.alpha = transform.alpha * 0.8f
                             }
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(backgroundColors[index])
                     )
                 }
 
