@@ -251,6 +251,11 @@ fun DropletsNavigation() {
                     },
                     onUpdateScreenshot = { id, screenshotPath ->
                         viewModel.updateScreenshot(id, screenshotPath)
+                    },
+                    onDeleteApp = { id ->
+                        viewModel.deletePromptHistory(context, id) {
+                            navController.popBackStack()
+                        }
                     }
                 )
             }

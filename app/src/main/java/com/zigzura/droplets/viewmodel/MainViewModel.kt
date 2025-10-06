@@ -208,12 +208,14 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun deletePromptHistory(context: Context, id: String) {
+    fun deletePromptHistory(context: Context, id: String, onComplete: (() -> Unit)? = null) {
         viewModelScope.launch {
             // Delete the screenshot file first
             ScreenshotUtils.deleteScreenshot(context, id)
             // Then delete the prompt history data
             preferencesManager.deletePromptHistory(id)
+            // Call the completion callback on the main thread
+            onComplete?.invoke()
         }
     }
 
