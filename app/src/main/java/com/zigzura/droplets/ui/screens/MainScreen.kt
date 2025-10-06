@@ -32,13 +32,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.zigzura.droplets.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     onNavigateToSignup: () -> Unit,
     onNavigateToDebug: () -> Unit,
-    onNavigateToAppView: (String) -> Unit = {},
     onNavigateToStacks: () -> Unit = {}
 ) {
     val viewModel: MainViewModel = hiltViewModel()
@@ -50,6 +50,7 @@ fun MainScreen(
     val promptHistory by viewModel.promptHistory.collectAsState(initial = emptyList())
     val keyboardController = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     var selectedTab by remember { mutableIntStateOf(0) }
     var prompt by remember { mutableStateOf("") }
@@ -65,12 +66,15 @@ fun MainScreen(
         }
     }
 
-    // Navigate to newly created app
+    // Show success message when app is created
     LaunchedEffect(currentHistoryItem) {
         currentHistoryItem?.let { item ->
-            // If we have a current item and we're on the create tab, navigate to it
+            // If we have a current item and we're on the create tab, show success
             if (selectedTab == 1 && currentHtml.isNotEmpty()) {
-                onNavigateToAppView(item.id)
+                snackbarHostState.showSnackbar(
+                    message = "App '${item.title ?: "Untitled"}' created successfully!",
+                    duration = SnackbarDuration.Short
+                )
                 selectedTab = 0 // Switch back to My Apps tab
             }
         }
@@ -156,7 +160,13 @@ fun MainScreen(
                     showFavoritesOnly = showFavoritesOnly,
                     onShowFavoritesToggle = { showFavoritesOnly = it },
                     onHistoryItemClick = { historyItem ->
-                        onNavigateToAppView(historyItem.id)
+                        // Since AppViewScreen is removed, you might want to handle this differently
+                        // For now, we'll just show a message or handle as needed
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = "App '${historyItem.title ?: "Untitled"}' selected"
+                            )
+                        }
                     },
                     onToggleFavorite = { id ->
                         viewModel.toggleFavorite(id)
@@ -183,7 +193,8 @@ fun MainScreen(
                         }
                     },
                     onAppCreated = { appId ->
-                        onNavigateToAppView(appId)
+                        // Since AppViewScreen is removed, just show success message
+                        // The LaunchedEffect above will handle showing the success message
                     },
                     isLoading = isLoading
                 )

@@ -19,12 +19,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import com.zigzura.droplets.navigation.Screen
-import com.zigzura.droplets.ui.screens.AppViewScreen
 import com.zigzura.droplets.ui.screens.DebugScreen
 import com.zigzura.droplets.ui.screens.MainScreen
 import com.zigzura.droplets.ui.screens.SignupScreen
 import com.zigzura.droplets.ui.screens.SplashScreen
 import com.zigzura.droplets.ui.screens.StacksScreen
+import com.zigzura.droplets.ui.screens.LoadingSplashScreen
 import com.zigzura.droplets.ui.theme.DropletsTheme
 import com.zigzura.droplets.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -53,8 +53,43 @@ fun DropletsNavigation() {
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Splash.route
+        startDestination = Screen.LoadingSplash.route
     ) {
+        composable(Screen.LoadingSplash.route) {
+            LoadingSplashScreen(
+                onNavigateToStacks = {
+                    navController.navigate(Screen.Stacks.route) {
+                        popUpTo(Screen.LoadingSplash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.Stacks.route) {
+            val viewModel: MainViewModel = hiltViewModel()
+            val promptHistory by viewModel.promptHistory.collectAsState(initial = emptyList())
+
+            StacksScreen(
+                promptHistory = promptHistory,
+                onNavigateToApp = { appId ->
+                    // Navigate to the specific app - you can customize this behavior
+                    // For now, we'll just log or handle as needed
+                    // Since AppViewScreen is being removed, you might want to handle this differently
+                },
+                onNavigateToMain = {
+                    navController.navigate(Screen.Main.route)
+                },
+                onNavigateToCreate = {
+                    navController.navigate(Screen.Main.route)
+                    // You can add a parameter to open directly to the create tab if needed
+                },
+                onNavigateToSettings = {
+                    navController.navigate(Screen.Main.route)
+                    // You can add a parameter to open directly to the settings tab if needed
+                }
+            )
+        }
+
         composable(Screen.Splash.route) {
             SplashScreen(
                 onNavigateToSignup = {
@@ -88,9 +123,6 @@ fun DropletsNavigation() {
                 onNavigateToDebug = {
                     navController.navigate(Screen.Debug.route)
                 },
-                onNavigateToAppView = { appId ->
-                    navController.navigate(Screen.AppView.createRoute(appId))
-                },
                 onNavigateToStacks = {
                     navController.navigate(Screen.Stacks.route)
                 }
@@ -103,56 +135,6 @@ fun DropletsNavigation() {
                     navController.popBackStack()
                 }
             )
-        }
-
-        composable(Screen.Stacks.route) {
-            val viewModel: MainViewModel = hiltViewModel()
-            val promptHistory by viewModel.promptHistory.collectAsState(initial = emptyList())
-
-            StacksScreen(
-                promptHistory = promptHistory,
-                onNavigateToApp = { appId ->
-                    navController.navigate(Screen.AppView.createRoute(appId))
-                }
-            )
-        }
-
-        composable(
-            route = Screen.AppView.route,
-            arguments = listOf(navArgument("appId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val appId = backStackEntry.arguments?.getString("appId") ?: return@composable
-            val viewModel: MainViewModel = hiltViewModel()
-            val promptHistory by viewModel.promptHistory.collectAsState(initial = emptyList())
-            val currentHtml by viewModel.currentHtml.collectAsState()
-
-            val historyItem = promptHistory.find { it.id == appId }
-
-            if (historyItem != null) {
-                // Load the app if not already loaded
-                LaunchedEffect(appId) {
-                    if (currentHtml.isEmpty() || viewModel.currentHistoryItem.value?.id != appId) {
-                        viewModel.loadHistoryItem(historyItem)
-                    }
-                }
-
-                AppViewScreen(
-                    historyItem = historyItem,
-                    htmlContent = currentHtml,
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    },
-                    onToggleFavorite = { id ->
-                        viewModel.toggleFavorite(id)
-                    },
-                    onUpdateTitle = { id, title ->
-                        viewModel.updateTitle(id, title)
-                    },
-                    onUpdateScreenshot = { id, screenshotPath ->
-                        viewModel.updateScreenshot(id, screenshotPath)
-                    }
-                )
-            }
         }
     }
 }

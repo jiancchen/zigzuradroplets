@@ -1,15 +1,27 @@
 package com.zigzura.droplets.ui.screens
 
 import android.graphics.BitmapFactory
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,7 +51,10 @@ import java.util.concurrent.ConcurrentHashMap
 @Composable
 fun StacksScreen(
     promptHistory: List<PromptHistory> = emptyList(),
-    onNavigateToApp: (String) -> Unit = {}
+    onNavigateToApp: (String) -> Unit = {},
+    onNavigateToMain: () -> Unit = {},
+    onNavigateToCreate: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {}
 ) {
     // Use actual prompt history or sample data if empty
     val historyItems = if (promptHistory.isNotEmpty()) {
@@ -76,6 +91,14 @@ fun StacksScreen(
             items = historyItems,
             onNavigateToApp = onNavigateToApp,
             modifier = Modifier.fillMaxSize()
+        )
+
+        // Add floating navigation toolbar
+        StacksFloatingToolbar(
+            onNavigateToMain = onNavigateToMain,
+            onNavigateToCreate = onNavigateToCreate,
+            onNavigateToSettings = onNavigateToSettings,
+            modifier = Modifier.align(Alignment.BottomEnd)
         )
     }
 }
@@ -431,6 +454,140 @@ object OptimizedImageLoader {
             }
         }
         return inSampleSize
+    }
+}
+
+@Composable
+fun StacksFloatingToolbar(
+    onNavigateToMain: () -> Unit,
+    onNavigateToCreate: () -> Unit,
+    onNavigateToSettings: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.BottomEnd
+    ) {
+        // Backdrop for dismissing menu
+        if (isExpanded) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.3f))
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        isExpanded = false
+                    }
+            )
+        }
+
+        Column(
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Menu Items (visible when expanded)
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    StacksFloatingMenuItem(
+                        icon = Icons.Default.Home,
+                        label = "My Apps",
+                        onClick = {
+                            onNavigateToMain()
+                            isExpanded = false
+                        }
+                    )
+                    StacksFloatingMenuItem(
+                        icon = Icons.Default.Add,
+                        label = "Create",
+                        onClick = {
+                            onNavigateToCreate()
+                            isExpanded = false
+                        }
+                    )
+                    StacksFloatingMenuItem(
+                        icon = Icons.Default.Settings,
+                        label = "Settings",
+                        onClick = {
+                            onNavigateToSettings()
+                            isExpanded = false
+                        }
+                    )
+                }
+            }
+
+            // Main FAB
+            FloatingActionButton(
+                onClick = { isExpanded = !isExpanded },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 6.dp,
+                    pressedElevation = 8.dp
+                )
+            ) {
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.Close else Icons.Default.Menu,
+                    contentDescription = if (isExpanded) "Close menu" else "Open menu",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun StacksFloatingMenuItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 2.dp,
+            shadowElevation = 4.dp
+        ) {
+            Text(
+                text = label,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Normal
+            )
+        }
+
+        SmallFloatingActionButton(
+            onClick = onClick,
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            elevation = FloatingActionButtonDefaults.elevation(
+                defaultElevation = 4.dp,
+                pressedElevation = 8.dp
+            )
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }
 
