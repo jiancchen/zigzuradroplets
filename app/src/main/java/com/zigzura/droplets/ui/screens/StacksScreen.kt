@@ -105,8 +105,8 @@ fun StacksScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
 
-    // Filter items based on search or favorites
-    val filteredItems = remember(historyItems, searchText, showFavorites, isSearchActive) {
+    // Filter items only when search is active, not when showing favorites
+    val filteredItems = remember(historyItems, searchText, isSearchActive) {
         when {
             isSearchActive && searchText.text.isNotBlank() -> {
                 historyItems.filter { item ->
@@ -114,10 +114,7 @@ fun StacksScreen(
                     item.prompt.contains(searchText.text, ignoreCase = true)
                 }
             }
-            showFavorites -> {
-                historyItems.filter { it.favorite == true }
-            }
-            else -> historyItems
+            else -> historyItems // Always show all items when not searching
         }
     }
 
@@ -126,14 +123,14 @@ fun StacksScreen(
             .fillMaxSize()
             .background(Color(0xFFFFD84E))
     ) {
-        // Main 3D Stack
+        // Main 3D Stack - fills entire screen
         Scrollable3DStack(
             items = filteredItems,
             onNavigateToApp = onNavigateToApp,
             modifier = Modifier.fillMaxSize()
         )
 
-        // Search bar at the top
+        // Search bar at the top with proper system padding
         SearchBarWithFavorites(
             searchText = searchText,
             onSearchTextChange = {
@@ -163,7 +160,8 @@ fun StacksScreen(
             focusRequester = focusRequester,
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(16.dp)
+                .statusBarsPadding() // Add system status bar padding
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         )
 
         // Add floating navigation toolbar
@@ -678,6 +676,12 @@ fun SearchBarWithFavorites(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    // Calculate most used apps (you can implement your own logic here)
+    val mostUsedItems = remember(favoriteItems) {
+        // For now, using sample logic - you can replace with actual usage tracking
+        favoriteItems.shuffled().take(5) // Placeholder for most used logic
+    }
+
     Column(modifier = modifier) {
         // Semi-transparent white pill search bar
         Surface(
@@ -763,9 +767,9 @@ fun SearchBarWithFavorites(
             }
         }
 
-        // White box with favorites (shown when favorites are active and no typing)
+        // White box with favorites and most used (shown when favorites are active and no typing)
         AnimatedVisibility(
-            visible = showFavorites && searchText.text.isBlank() && favoriteItems.isNotEmpty(),
+            visible = showFavorites && searchText.text.isBlank() && (favoriteItems.isNotEmpty() || mostUsedItems.isNotEmpty()),
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically()
         ) {
@@ -780,23 +784,53 @@ fun SearchBarWithFavorites(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    Text(
-                        text = "Favorite Apps",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black.copy(alpha = 0.8f),
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
+                    // Favorite Apps Section
+                    if (favoriteItems.isNotEmpty()) {
+                        Text(
+                            text = "Favorite Apps",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black.copy(alpha = 0.8f),
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
 
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(horizontal = 4.dp)
-                    ) {
-                        items(favoriteItems.size) { index ->
-                            FavoriteAppCard(
-                                historyItem = favoriteItems[index],
-                                onNavigateToApp = onNavigateToApp
-                            )
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(horizontal = 4.dp)
+                        ) {
+                            items(favoriteItems.size) { index ->
+                                FavoriteAppCard(
+                                    historyItem = favoriteItems[index],
+                                    onNavigateToApp = onNavigateToApp
+                                )
+                            }
+                        }
+                    }
+
+                    // Most Used Apps Section
+                    if (mostUsedItems.isNotEmpty()) {
+                        if (favoriteItems.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(20.dp))
+                        }
+
+                        Text(
+                            text = "Most Used Apps",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black.copy(alpha = 0.8f),
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(horizontal = 4.dp)
+                        ) {
+                            items(mostUsedItems.size) { index ->
+                                MostUsedAppCard(
+                                    historyItem = mostUsedItems[index],
+                                    onNavigateToApp = onNavigateToApp
+                                )
+                            }
                         }
                     }
                 }
@@ -828,6 +862,48 @@ fun FavoriteAppCard(
             Icon(
                 imageVector = Icons.Default.Star,
                 contentDescription = "Favorite app",
+                tint = Color(0xFFFFB74D),
+                modifier = Modifier.size(24.dp)
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = historyItem.title?.take(15) ?: historyItem.prompt.take(15),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black.copy(alpha = 0.8f),
+                maxLines = 2,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+fun MostUsedAppCard(
+    historyItem: PromptHistory,
+    onNavigateToApp: (String) -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .size(width = 120.dp, height = 80.dp)
+            .clickable { onNavigateToApp(historyItem.id) },
+        shape = RoundedCornerShape(12.dp),
+        color = Color.White.copy(alpha = 0.8f),
+        shadowElevation = 2.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Placeholder for most used icon (can be a different icon or same as favorite)
+            Icon(
+                imageVector = Icons.Default.Star, // Change this icon if needed
+                contentDescription = "Most used app",
                 tint = Color(0xFFFFB74D),
                 modifier = Modifier.size(24.dp)
             )
