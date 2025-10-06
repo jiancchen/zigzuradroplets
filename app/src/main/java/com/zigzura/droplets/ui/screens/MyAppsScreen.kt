@@ -22,7 +22,8 @@ fun MyAppsScreen(
     onHistoryItemClick: (PromptHistory) -> Unit,
     onToggleFavorite: (String) -> Unit,
     onUpdateTitle: (String, String) -> Unit,
-    onClearHistory: () -> Unit
+    onClearHistory: () -> Unit,
+    onDeleteItem: (String) -> Unit = {} // Add delete callback
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -102,7 +103,8 @@ fun MyAppsScreen(
                         historyItem = historyItem,
                         onClick = { onHistoryItemClick(historyItem) },
                         onToggleFavorite = onToggleFavorite,
-                        onUpdateTitle = onUpdateTitle
+                        onUpdateTitle = onUpdateTitle,
+                        onDelete = onDeleteItem // Fix parameter name to match HistoryItem
                     )
                 }
             }

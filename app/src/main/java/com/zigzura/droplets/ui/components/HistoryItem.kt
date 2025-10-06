@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -33,9 +34,11 @@ fun HistoryItem(
     historyItem: PromptHistory,
     onClick: () -> Unit,
     onToggleFavorite: (String) -> Unit = {},
-    onUpdateTitle: (String, String) -> Unit = { _, _ -> }
+    onUpdateTitle: (String, String) -> Unit = { _, _ -> },
+    onDelete: (String) -> Unit = {} // Add delete callback
 ) {
     var showTitleDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     // Load screenshot if available
@@ -209,6 +212,24 @@ fun HistoryItem(
                                 modifier = Modifier.size(16.dp)
                             )
                         }
+
+                        // Delete button
+                        IconButton(
+                            onClick = { showDeleteDialog = true },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Delete item",
+                                tint = if (screenshotBitmap != null)
+                                    Color.White
+                                else if (historyItem.favorite == true)
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -245,6 +266,32 @@ fun HistoryItem(
             dismissButton = {
                 TextButton(
                     onClick = { showTitleDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Delete confirmation dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Confirm Delete") },
+            text = { Text("Are you sure you want to delete this item?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete(historyItem.id)
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteDialog = false }
                 ) {
                     Text("Cancel")
                 }

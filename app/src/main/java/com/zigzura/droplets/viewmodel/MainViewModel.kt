@@ -1,10 +1,12 @@
 package com.zigzura.droplets.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zigzura.droplets.data.PreferencesManager
 import com.zigzura.droplets.data.PromptHistory
 import com.zigzura.droplets.repository.ClaudeRepository
+import com.zigzura.droplets.utils.ScreenshotUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -108,6 +110,15 @@ class MainViewModel @Inject constructor(
     fun updateScreenshot(id: String, screenshotPath: String?) {
         viewModelScope.launch {
             preferencesManager.updateScreenshot(id, screenshotPath)
+        }
+    }
+
+    fun deletePromptHistory(context: Context, id: String) {
+        viewModelScope.launch {
+            // Delete the screenshot file first
+            ScreenshotUtils.deleteScreenshot(context, id)
+            // Then delete the prompt history data
+            preferencesManager.deletePromptHistory(id)
         }
     }
 }

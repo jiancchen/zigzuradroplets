@@ -24,6 +24,7 @@ import com.zigzura.droplets.ui.screens.DebugScreen
 import com.zigzura.droplets.ui.screens.MainScreen
 import com.zigzura.droplets.ui.screens.SignupScreen
 import com.zigzura.droplets.ui.screens.SplashScreen
+import com.zigzura.droplets.ui.screens.StacksScreen
 import com.zigzura.droplets.ui.theme.DropletsTheme
 import com.zigzura.droplets.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -89,6 +90,9 @@ fun DropletsNavigation() {
                 },
                 onNavigateToAppView = { appId ->
                     navController.navigate(Screen.AppView.createRoute(appId))
+                },
+                onNavigateToStacks = {
+                    navController.navigate(Screen.Stacks.route)
                 }
             )
         }
@@ -98,6 +102,15 @@ fun DropletsNavigation() {
                 onNavigateBack = {
                     navController.popBackStack()
                 }
+            )
+        }
+
+        composable(Screen.Stacks.route) {
+            val viewModel: MainViewModel = hiltViewModel()
+            val promptHistory by viewModel.promptHistory.collectAsState(initial = emptyList())
+
+            StacksScreen(
+                promptHistory = promptHistory
             )
         }
 

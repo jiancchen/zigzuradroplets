@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,7 +38,8 @@ import com.zigzura.droplets.viewmodel.MainViewModel
 fun MainScreen(
     onNavigateToSignup: () -> Unit,
     onNavigateToDebug: () -> Unit,
-    onNavigateToAppView: (String) -> Unit = {}
+    onNavigateToAppView: (String) -> Unit = {},
+    onNavigateToStacks: () -> Unit = {}
 ) {
     val viewModel: MainViewModel = hiltViewModel()
     val currentHtml by viewModel.currentHtml.collectAsState()
@@ -47,6 +49,7 @@ fun MainScreen(
     val promptRejection by viewModel.promptRejection.collectAsState()
     val promptHistory by viewModel.promptHistory.collectAsState(initial = emptyList())
     val keyboardController = LocalSoftwareKeyboardController.current
+    val context = LocalContext.current
 
     var selectedTab by remember { mutableIntStateOf(0) }
     var prompt by remember { mutableStateOf("") }
@@ -163,6 +166,9 @@ fun MainScreen(
                     },
                     onClearHistory = {
                         viewModel.clearHistory()
+                    },
+                    onDeleteItem = { id ->
+                        viewModel.deletePromptHistory(context, id)
                     }
                 )
 
@@ -185,6 +191,7 @@ fun MainScreen(
                 2 -> SettingsScreen(
                     onNavigateToSignup = onNavigateToSignup,
                     onNavigateToDebug = onNavigateToDebug,
+                    onNavigateToStacks = onNavigateToStacks,
                     promptHistory = promptHistory
                 )
             }

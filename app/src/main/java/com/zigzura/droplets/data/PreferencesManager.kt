@@ -126,6 +126,18 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
+    suspend fun deletePromptHistory(id: String) {
+        context.dataStore.edit { preferences ->
+            val currentJson = preferences[PROMPT_HISTORY] ?: "[]"
+            val type = object : TypeToken<List<PromptHistory>>() {}.type
+            val currentList: MutableList<PromptHistory> = gson.fromJson(currentJson, type) ?: mutableListOf()
+
+            // Remove the item with matching id
+            currentList.removeAll { it.id == id }
+            preferences[PROMPT_HISTORY] = gson.toJson(currentList)
+        }
+    }
+
     suspend fun saveTemperature(temperature: Float) {
         context.dataStore.edit { preferences ->
             preferences[TEMPERATURE] = temperature

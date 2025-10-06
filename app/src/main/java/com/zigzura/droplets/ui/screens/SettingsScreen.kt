@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     onNavigateToSignup: () -> Unit,
     onNavigateToDebug: () -> Unit,
+    onNavigateToStacks: () -> Unit = {},
     promptHistory: List<PromptHistory>
 ) {
     val context = LocalContext.current
@@ -68,6 +69,14 @@ fun SettingsScreen(
                         title = "Debug Mode",
                         description = "Enable debugging features",
                         onClick = onNavigateToDebug
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    SettingsItem(
+                        title = "3D Stacks View",
+                        description = "View your apps in a 3D perspective stack",
+                        onClick = onNavigateToStacks
                     )
                 }
             }
