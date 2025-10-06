@@ -54,7 +54,7 @@ fun ThreeDCard(
     title: String,
     rotationX: Float,
     rotationY: Float,
-    elevation: Dp,
+    backgroundColor: Color = Color.Black,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -63,9 +63,8 @@ fun ThreeDCard(
                 this.rotationX = rotationX
                 this.rotationY = rotationY
                 cameraDistance = 12 * density
-                shadowElevation = elevation.toPx()
             }
-            .background(Color.Black, RoundedCornerShape(16.dp))
+            .background(backgroundColor, RoundedCornerShape(16.dp))
             .border(1.dp, Color.DarkGray, RoundedCornerShape(16.dp))
             .padding(24.dp)
     ) {
@@ -85,6 +84,27 @@ fun Scrollable3DStack(
 ) {
     val listState = rememberLazyListState()
 
+    // Generate random vibrant colors for background cards
+    val backgroundColors = remember(items.size) {
+        items.mapIndexed { index, _ ->
+            val colors = listOf(
+                Color(0xFFE91E63), // Pink
+                Color(0xFF9C27B0), // Purple
+                Color(0xFF673AB7), // Deep Purple
+                Color(0xFF3F51B5), // Indigo
+                Color(0xFF2196F3), // Blue
+                Color(0xFF00BCD4), // Cyan
+                Color(0xFF009688), // Teal
+                Color(0xFF4CAF50), // Green
+                Color(0xFF8BC34A), // Light Green
+                Color(0xFFFF9800), // Orange
+                Color(0xFFFF5722), // Deep Orange
+                Color(0xFFF44336)  // Red
+            )
+            colors[index % colors.size]
+        }
+    }
+
     LazyColumn(
         state = listState,
         modifier = modifier.fillMaxSize(),
@@ -99,27 +119,48 @@ fun Scrollable3DStack(
             val depth = (index - firstVisible) + visibleOffset
             val clamped = depth.coerceIn(0f, 4f)  // only animate first few visible
 
+            // Smooth scaling that grows gradually as cards approach the top
+            val smoothScale = 0.7f + (0.3f * (1f - (clamped / 4f).coerceIn(0f, 1f)))
+
             val rotationX = 8f + (clamped * 6f)
             val rotationY = -10f
-            val translationY = clamped * 50f
-            val scale = 1f - (clamped * 0.08f)
-            val alpha = 1f - (clamped * 0.25f)
+            val translationY = clamped * 40f
+            val alpha = (1f - (clamped * 0.2f)).coerceIn(0.2f, 1f)
 
-            ThreeDCard(
-                title = item,
-                rotationX = rotationX,
-                rotationY = rotationY,
-                elevation = (12 - clamped * 2).dp,
+            Box(
                 modifier = Modifier
-                    .graphicsLayer {
-                        this.translationY = translationY
-                        this.scaleX = scale
-                        this.scaleY = scale
-                        this.alpha = alpha
-                    }
-                    .padding(vertical = 16.dp)
-                    .size(250.dp, 160.dp)
-            )
+                    .padding(vertical = 12.dp)
+                    .size((250 * smoothScale).dp, (160 * smoothScale).dp)
+            ) {
+                // Background card (colorful offset)
+                ThreeDCard(
+                    title = "",
+                    rotationX = rotationX,
+                    rotationY = rotationY,
+                    backgroundColor = backgroundColors[index],
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            this.translationY = translationY + 8f
+                            this.translationX = 6f
+                            this.alpha = alpha * 0.8f
+                        }
+                )
+
+                // Main card (black with text)
+                ThreeDCard(
+                    title = item,
+                    rotationX = rotationX,
+                    rotationY = rotationY,
+                    backgroundColor = Color.Black,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            this.translationY = translationY
+                            this.alpha = alpha
+                        }
+                )
+            }
         }
     }
 }
