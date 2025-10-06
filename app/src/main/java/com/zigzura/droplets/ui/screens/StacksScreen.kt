@@ -1,5 +1,7 @@
 package com.zigzura.droplets.ui.screens
 
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -11,30 +13,48 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zigzura.droplets.data.PromptHistory
+import com.zigzura.droplets.utils.ScreenshotUtils
 import kotlinx.coroutines.delay
 
 @Composable
 fun StacksScreen(
     promptHistory: List<PromptHistory> = emptyList()
 ) {
-    // Convert prompt history to card titles, or use sample data if empty
-    val cardTitles = if (promptHistory.isNotEmpty()) {
-        promptHistory.map { history ->
-            history.title?.takeIf { it.isNotBlank() } ?: history.prompt.take(50) + "..."
-        }
+    // Use actual prompt history or sample data if empty
+    val historyItems = if (promptHistory.isNotEmpty()) {
+        promptHistory
     } else {
         listOf(
-            "Create your first app",
-            "Apps will appear here",
-            "Start generating content"
+            PromptHistory(
+                id = "sample1",
+                prompt = "Create your first app",
+                html = "",
+                title = "Sample App 1"
+            ),
+            PromptHistory(
+                id = "sample2",
+                prompt = "Apps will appear here",
+                html = "",
+                title = "Sample App 2"
+            ),
+            PromptHistory(
+                id = "sample3",
+                prompt = "Start generating content",
+                html = "",
+                title = "Sample App 3"
+            )
         )
     }
 
@@ -44,7 +64,7 @@ fun StacksScreen(
             .background(Color(0xFFFFD84E))
     ) {
         Scrollable3DStack(
-            items = cardTitles,
+            items = historyItems,
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -80,7 +100,7 @@ fun ThreeDCard(
 
 @Composable
 fun Scrollable3DStack(
-    items: List<String>,
+    items: List<PromptHistory>,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -163,8 +183,8 @@ fun Scrollable3DStack(
             ) {
                 // Background card (colorful offset) - skip for distant items during fast scroll
                 if (!useSimplifiedGraphics) {
-                    ThreeDCard(
-                        title = "",
+                    ThreeDImageCard(
+                        historyItem = item,
                         rotationX = rotationX,
                         rotationY = rotationY,
                         backgroundColor = backgroundColors[index],
@@ -178,9 +198,9 @@ fun Scrollable3DStack(
                     )
                 }
 
-                // Main card (black with text)
-                ThreeDCard(
-                    title = item,
+                // Main card with screenshot/image
+                ThreeDImageCard(
+                    historyItem = item,
                     rotationX = rotationX,
                     rotationY = rotationY,
                     backgroundColor = Color.Black,
@@ -204,6 +224,79 @@ fun Scrollable3DStack(
     }
 }
 
+@Composable
+fun ThreeDImageCard(
+    historyItem: PromptHistory,
+    rotationX: Float,
+    rotationY: Float,
+    backgroundColor: Color = Color.Black,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    // Lazy load screenshot with remember to avoid reloading on recomposition
+    val screenshotBitmap = remember(historyItem.id) {
+        val screenshotFile = ScreenshotUtils.getScreenshotFile(context, historyItem.id)
+        screenshotFile?.let { file ->
+            BitmapFactory.decodeFile(file.absolutePath)?.asImageBitmap()
+        }
+    }
+
+    val displayTitle = historyItem.title?.takeIf { it.isNotBlank() }
+        ?: historyItem.prompt.take(50) + "..."
+
+    Box(
+        modifier = modifier
+            .graphicsLayer {
+                this.rotationX = rotationX
+                this.rotationY = rotationY
+                cameraDistance = 12 * density
+            }
+            .clip(RoundedCornerShape(16.dp))
+    ) {
+        // Background image or color
+        if (screenshotBitmap != null) {
+            Image(
+                bitmap = screenshotBitmap,
+                contentDescription = "App screenshot",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { alpha = 0.7f }, // 70% opacity for image
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            // Fallback to solid background color
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(backgroundColor)
+            )
+        }
+
+        // Black overlay for text readability
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.4f))
+        )
+
+        // Text content
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            contentAlignment = Alignment.BottomStart
+        ) {
+            Text(
+                text = displayTitle,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+        }
+    }
+}
+
 // Data class to hold pre-calculated transform values
 private data class CardTransform(
     val scale: Float = 1f,
@@ -216,11 +309,36 @@ private data class CardTransform(
 @Composable
 fun PreviewScrollable3DStack() {
     val cards = listOf(
-        "Ocean Waves – Coastal",
-        "Mountain Wind – Alpine",
-        "City Nights – Urban",
-        "Rainforest – Tropical",
-        "Desert Heat – Mirage"
+        PromptHistory(
+            id = "preview1",
+            prompt = "Ocean Waves – Coastal",
+            html = "",
+            title = "Ocean Waves"
+        ),
+        PromptHistory(
+            id = "preview2",
+            prompt = "Mountain Wind – Alpine",
+            html = "",
+            title = "Mountain Wind"
+        ),
+        PromptHistory(
+            id = "preview3",
+            prompt = "City Nights – Urban",
+            html = "",
+            title = "City Nights"
+        ),
+        PromptHistory(
+            id = "preview4",
+            prompt = "Rainforest – Tropical",
+            html = "",
+            title = "Rainforest"
+        ),
+        PromptHistory(
+            id = "preview5",
+            prompt = "Desert Heat – Mirage",
+            html = "",
+            title = "Desert Heat"
+        )
     )
     Box(
         Modifier
