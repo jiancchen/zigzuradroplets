@@ -100,6 +100,7 @@ fun StacksScreen(
     var searchText by remember { mutableStateOf(TextFieldValue("")) }
     var showFavorites by remember { mutableStateOf(false) }
     var isSearchActive by remember { mutableStateOf(false) }
+    var isFabExpanded by remember { mutableStateOf(false) }
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
 
@@ -122,6 +123,19 @@ fun StacksScreen(
             .fillMaxSize()
             .background(Color(0xFFFFD84E))
     ) {
+        // Full-screen backdrop overlay when FAB is expanded - positioned first to be behind everything
+        AnimatedVisibility(
+            visible = isFabExpanded,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.3f))
+            )
+        }
+
         // Main 3D Stack - fills entire screen
         Scrollable3DStack(
             items = filteredItems,
@@ -171,6 +185,8 @@ fun StacksScreen(
             onNavigateToMain = onNavigateToMain,
             onNavigateToCreate = onNavigateToCreate,
             onNavigateToSettings = onNavigateToSettings,
+            isExpanded = isFabExpanded,
+            onExpandedChange = { isFabExpanded = it },
             modifier = Modifier.align(Alignment.BottomEnd)
         )
     }
@@ -326,78 +342,70 @@ fun StacksFloatingToolbar(
     onNavigateToMain: () -> Unit,
     onNavigateToCreate: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    isExpanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var isExpanded by remember { mutableStateOf(false) }
-
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.BottomEnd
+    Column(
+        modifier = modifier.padding(16.dp),
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Remove the backdrop - no more black overlay covering content
-
-        Column(
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        // Menu Items (visible when expanded) - positioned above the main FAB
+        AnimatedVisibility(
+            visible = isExpanded,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
         ) {
-            // Menu Items (visible when expanded)
-            AnimatedVisibility(
-                visible = isExpanded,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    StacksFloatingMenuItem(
-                        icon = Icons.Default.Home,
-                        label = "My Apps",
-                        backgroundColor = Color(0xFF2196F3), // Vibrant blue
-                        onClick = {
-                            onNavigateToMain()
-                            isExpanded = false
-                        }
-                    )
-                    StacksFloatingMenuItem(
-                        icon = Icons.Default.Add,
-                        label = "Create",
-                        backgroundColor = Color(0xFF4CAF50), // Vibrant green
-                        onClick = {
-                            onNavigateToCreate()
-                            isExpanded = false
-                        }
-                    )
-                    StacksFloatingMenuItem(
-                        icon = Icons.Default.Settings,
-                        label = "Settings",
-                        backgroundColor = Color(0xFF9C27B0), // Vibrant purple
-                        onClick = {
-                            onNavigateToSettings()
-                            isExpanded = false
-                        }
-                    )
-                }
+                StacksFloatingMenuItem(
+                    icon = Icons.Default.Home,
+                    label = "My Apps",
+                    backgroundColor = Color(0xFFFF8F00), // Dark orange
+                    onClick = {
+                        onNavigateToMain()
+                        onExpandedChange(false)
+                    }
+                )
+                StacksFloatingMenuItem(
+                    icon = Icons.Default.Add,
+                    label = "Create",
+                    backgroundColor = Color(0xFFFF6F00), // Darker orange
+                    onClick = {
+                        onNavigateToCreate()
+                        onExpandedChange(false)
+                    }
+                )
+                StacksFloatingMenuItem(
+                    icon = Icons.Default.Settings,
+                    label = "Settings",
+                    backgroundColor = Color(0xFFE65100), // Deep orange
+                    onClick = {
+                        onNavigateToSettings()
+                        onExpandedChange(false)
+                    }
+                )
             }
+        }
 
-            // Main FAB with custom colors to match your yellow theme
-            FloatingActionButton(
-                onClick = { isExpanded = !isExpanded },
-                containerColor = Color(0xFFFFB74D), // Golden yellow to match your theme
-                contentColor = Color.White, // White icon for contrast
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 8.dp,
-                    pressedElevation = 12.dp
-                )
-            ) {
-                Icon(
-                    imageVector = if (isExpanded) Icons.Default.Close else Icons.Default.Menu,
-                    contentDescription = if (isExpanded) stringResource(R.string.close_menu) else stringResource(R.string.open_menu),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+        // Main FAB - positioned at the bottom of the column
+        FloatingActionButton(
+            onClick = { onExpandedChange(!isExpanded) },
+            containerColor = Color(0xFFFFB74D), // Golden yellow to match your theme
+            contentColor = Color.White, // White icon for contrast
+            elevation = FloatingActionButtonDefaults.elevation(
+                defaultElevation = 8.dp,
+                pressedElevation = 12.dp
+            )
+        ) {
+            Icon(
+                imageVector = if (isExpanded) Icons.Default.Close else Icons.Default.Menu,
+                contentDescription = if (isExpanded) stringResource(R.string.close_menu) else stringResource(R.string.open_menu),
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }
@@ -407,7 +415,7 @@ fun StacksFloatingMenuItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     onClick: () -> Unit,
-    backgroundColor: Color = Color(0xFFE91E63) // Default vibrant color
+    backgroundColor: Color = Color(0xFFFF8F00) // Default dark orange
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -415,7 +423,7 @@ fun StacksFloatingMenuItem(
     ) {
         Surface(
             shape = RoundedCornerShape(8.dp),
-            color = backgroundColor, // Use vibrant background color
+            color = backgroundColor, // Use dark orange/yellow shade
             tonalElevation = 2.dp,
             shadowElevation = 4.dp,
             modifier = Modifier.width(100.dp) // Fixed width to prevent jarring text differences
@@ -424,7 +432,7 @@ fun StacksFloatingMenuItem(
                 text = label,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 style = MaterialTheme.typography.labelLarge,
-                color = Color.White, // White text for contrast on vibrant background
+                color = Color.White, // White text for contrast on dark background
                 fontWeight = FontWeight.Medium,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center // Center align for consistency
             )
