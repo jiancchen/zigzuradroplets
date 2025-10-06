@@ -111,6 +111,21 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
+    suspend fun updateScreenshot(id: String, screenshotPath: String?) {
+        context.dataStore.edit { preferences ->
+            val currentJson = preferences[PROMPT_HISTORY] ?: "[]"
+            val type = object : TypeToken<List<PromptHistory>>() {}.type
+            val currentList: MutableList<PromptHistory> = gson.fromJson(currentJson, type) ?: mutableListOf()
+
+            val index = currentList.indexOfFirst { it.id == id }
+            if (index != -1) {
+                val item = currentList[index]
+                currentList[index] = item.copy(screenshotPath = screenshotPath)
+                preferences[PROMPT_HISTORY] = gson.toJson(currentList)
+            }
+        }
+    }
+
     suspend fun saveTemperature(temperature: Float) {
         context.dataStore.edit { preferences ->
             preferences[TEMPERATURE] = temperature

@@ -104,4 +104,10 @@ class MainViewModel @Inject constructor(
             preferencesManager.updateTitle(id, title)
         }
     }
+
+    fun updateScreenshot(id: String, screenshotPath: String?) {
+        viewModelScope.launch {
+            preferencesManager.updateScreenshot(id, screenshotPath)
+        }
+    }
 }

@@ -16,12 +16,16 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.zigzura.droplets.utils.ScreenshotUtils
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.UUID
 import java.security.MessageDigest
 
@@ -30,9 +34,11 @@ fun Weblet(
     paddingValues: PaddingValues = PaddingValues(0.dp),
     url: String? = null,
     htmlContent: String? = null,
-    appId: String // Required - no fallback needed since PromptHistory always has an ID
+    appId: String, // Required - no fallback needed since PromptHistory always has an ID
+    onScreenshotCaptured: ((String?) -> Unit)? = null // Callback for when screenshot is captured
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     // Use the provided appId directly - no fallback needed
     val webAppId = remember(appId) { appId }
@@ -58,6 +64,17 @@ fun Weblet(
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
                     Log.d("Weblet", "Page finished loading for appId: $webAppId")
+
+                    // Capture screenshot after a short delay to ensure content is rendered
+                    view?.let { webView ->
+                        coroutineScope.launch {
+                            delay(1000) // Wait for content to fully render
+                            val screenshotPath = ScreenshotUtils.captureWebViewScreenshot(
+                                context, webView, webAppId
+                            )
+                            onScreenshotCaptured?.invoke(screenshotPath)
+                        }
+                    }
                 }
             }
         }

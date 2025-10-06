@@ -131,6 +131,9 @@ fun DropletsNavigation() {
                     },
                     onUpdateTitle = { id, title ->
                         viewModel.updateTitle(id, title)
+                    },
+                    onUpdateScreenshot = { id, screenshotPath ->
+                        viewModel.updateScreenshot(id, screenshotPath)
                     }
                 )
             }

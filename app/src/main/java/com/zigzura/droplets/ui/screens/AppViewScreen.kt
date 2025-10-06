@@ -27,7 +27,8 @@ fun AppViewScreen(
     htmlContent: String,
     onNavigateBack: () -> Unit,
     onToggleFavorite: (String) -> Unit,
-    onUpdateTitle: (String, String) -> Unit
+    onUpdateTitle: (String, String) -> Unit,
+    onUpdateScreenshot: ((String, String?) -> Unit)? = null // Callback to update screenshot path
 ) {
     var showTitleDialog by remember { mutableStateOf(false) }
 
@@ -133,7 +134,10 @@ fun AppViewScreen(
                 ) {
                     Weblet(
                         htmlContent = htmlContent,
-                        appId = historyItem.id
+                        appId = historyItem.id,
+                        onScreenshotCaptured = { screenshotPath ->
+                            onUpdateScreenshot?.invoke(historyItem.id, screenshotPath)
+                        }
                     )
                 }
             } else {

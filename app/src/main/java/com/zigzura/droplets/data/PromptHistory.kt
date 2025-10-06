@@ -22,7 +22,9 @@ data class PromptHistory(
     @SerializedName("accessCount")
     val accessCount: Int? = 0,
     @SerializedName("model")
-    val model: String? = "claude-3-haiku-20240307"
+    val model: String? = "claude-3-haiku-20240307",
+    @SerializedName("screenshotPath")
+    val screenshotPath: String? = null
 )
 
 data class ClaudeRequest(

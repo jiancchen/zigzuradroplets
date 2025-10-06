@@ -1,11 +1,21 @@
 package com.zigzura.droplets.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.*
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -117,82 +128,6 @@ fun MainScreen(
                 )
             )
         },
-        bottomBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 12.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Surface(
-                    modifier = Modifier.height(64.dp),
-                    shape = RoundedCornerShape(32.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.95f),
-                    shadowElevation = 8.dp,
-                    tonalElevation = 3.dp
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // My Apps Button
-                        IconButton(
-                            onClick = { selectedTab = 0 },
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.Home,
-                                contentDescription = "My Apps",
-                                tint = if (selectedTab == 0)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-
-                        // Create FAB
-                        FloatingActionButton(
-                            onClick = { selectedTab = 1 },
-                            modifier = Modifier.size(48.dp),
-                            containerColor = if (selectedTab == 1)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = if (selectedTab == 1)
-                                MaterialTheme.colorScheme.onPrimary
-                            else
-                                MaterialTheme.colorScheme.onPrimaryContainer
-                        ) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = "Create",
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-
-                        // Settings Button
-                        IconButton(
-                            onClick = { selectedTab = 2 },
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.Settings,
-                                contentDescription = "Settings",
-                                tint = if (selectedTab == 2)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        },
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         },
@@ -253,6 +188,165 @@ fun MainScreen(
                     promptHistory = promptHistory
                 )
             }
+
+            // Add the floating navigation toolbar
+            FloatingM3Toolbar(
+                selectedTab = selectedTab,
+                onMyAppsClick = { selectedTab = 0 },
+                onCreateClick = { selectedTab = 1 },
+                onSettingsClick = { selectedTab = 2 }
+            )
+        }
+    }
+}
+
+@Composable
+fun FloatingM3Toolbar(
+    selectedTab: Int,
+    modifier: Modifier = Modifier,
+    onMyAppsClick: () -> Unit = {},
+    onCreateClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
+) {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.BottomEnd
+    ) {
+        // Backdrop for dismissing menu
+        if (isExpanded) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.3f))
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        isExpanded = false
+                    }
+            )
+        }
+
+        Column(
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Menu Items (visible when expanded)
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    FloatingMenuItem(
+                        icon = Icons.Default.Home,
+                        label = "My Apps",
+                        isSelected = selectedTab == 0,
+                        onClick = {
+                            onMyAppsClick()
+                            isExpanded = false
+                        }
+                    )
+                    FloatingMenuItem(
+                        icon = Icons.Default.Add,
+                        label = "Create",
+                        isSelected = selectedTab == 1,
+                        onClick = {
+                            onCreateClick()
+                            isExpanded = false
+                        }
+                    )
+                    FloatingMenuItem(
+                        icon = Icons.Default.Settings,
+                        label = "Settings",
+                        isSelected = selectedTab == 2,
+                        onClick = {
+                            onSettingsClick()
+                            isExpanded = false
+                        }
+                    )
+                }
+            }
+
+            // Main FAB
+            FloatingActionButton(
+                onClick = { isExpanded = !isExpanded },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 6.dp,
+                    pressedElevation = 8.dp
+                )
+            ) {
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.Close else Icons.Default.Menu,
+                    contentDescription = if (isExpanded) "Close menu" else "Open menu",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun FloatingMenuItem(
+    icon: ImageVector,
+    label: String,
+    isSelected: Boolean = false,
+    onClick: () -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = if (isSelected)
+                MaterialTheme.colorScheme.primaryContainer
+            else
+                MaterialTheme.colorScheme.surface,
+            tonalElevation = 2.dp,
+            shadowElevation = 4.dp
+        ) {
+            Text(
+                text = label,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                style = MaterialTheme.typography.labelLarge,
+                color = if (isSelected)
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                else
+                    MaterialTheme.colorScheme.onSurface,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            )
+        }
+
+        SmallFloatingActionButton(
+            onClick = onClick,
+            containerColor = if (isSelected)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = if (isSelected)
+                MaterialTheme.colorScheme.onPrimary
+            else
+                MaterialTheme.colorScheme.onSecondaryContainer,
+            elevation = FloatingActionButtonDefaults.elevation(
+                defaultElevation = if (isSelected) 6.dp else 4.dp,
+                pressedElevation = 8.dp
+            )
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
