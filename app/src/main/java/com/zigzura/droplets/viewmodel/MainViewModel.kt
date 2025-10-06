@@ -9,6 +9,8 @@ import com.zigzura.droplets.repository.ClaudeRepository
 import com.zigzura.droplets.utils.AppNotificationManager
 import com.zigzura.droplets.utils.ScreenshotUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -53,6 +55,7 @@ class MainViewModel @Inject constructor(
 
     val promptHistory = preferencesManager.promptHistory
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun generateHtml(prompt: String, enableDebug: Boolean = false, temperature: Double = 0.7) {
         // Generate UUID immediately so it's available to UI right away
         val uuid = UUID.randomUUID().toString()
@@ -65,6 +68,7 @@ class MainViewModel @Inject constructor(
             timestamp = System.currentTimeMillis()
         )
 
+        // Update UI state immediately in viewModelScope
         viewModelScope.launch {
             _isLoading.value = true
             _isGenerating.value = true
@@ -86,19 +90,23 @@ class MainViewModel @Inject constructor(
             } catch (e: Exception) {
                 android.util.Log.e("MainViewModel", "Failed to save initial prompt history", e)
             }
+        }
 
+        // Run the actual generation in GlobalScope so it persists across navigation
+        GlobalScope.launch {
             try {
-                _generationProgress.value = "Connecting to Claude AI..."
+                // Update progress from GlobalScope
+                viewModelScope.launch { _generationProgress.value = "Connecting to Claude AI..." }
 
                 claudeRepository.generateHtml(uuid, prompt, enableDebug, temperature).fold(
                     onSuccess = { result ->
-                        _generationProgress.value = "Finalizing your app..."
-                        _currentHtml.value = result.html
-                        _currentHistoryItem.value = result.promptHistory // Update with complete data
-                        _generationProgress.value = "App ready!"
-
-                        // Show notification if app is in background
-                        // We'll call this from MainActivity where we have context
+                        // Update UI state on success
+                        viewModelScope.launch {
+                            _generationProgress.value = "Finalizing your app..."
+                            _currentHtml.value = result.html
+                            _currentHistoryItem.value = result.promptHistory // Update with complete data
+                            _generationProgress.value = "App ready!"
+                        }
                     },
                     onFailure = { exception ->
                         // Clear the "GENERATING..." placeholder on error
@@ -109,54 +117,56 @@ class MainViewModel @Inject constructor(
                         }
 
                         val errorMessage = exception.message ?: "Unknown error occurred"
-                        if (errorMessage.startsWith("PROMPT_REJECTED:")) {
-                            val rejectionReason = errorMessage.substringAfter("PROMPT_REJECTED:")
-                            _promptRejection.value = rejectionReason
-                        } else if (errorMessage.startsWith("API Error:")) {
-                            // Convert different API errors to user-friendly messages
-                            val userFriendlyMessage = when {
-                                errorMessage.contains("529") || errorMessage.contains("overloaded_error") ||
-                                errorMessage.contains("Overloaded") -> "Claude is temporarily overloaded. Please try again in a moment."
+                        viewModelScope.launch {
+                            if (errorMessage.startsWith("PROMPT_REJECTED:")) {
+                                val rejectionReason = errorMessage.substringAfter("PROMPT_REJECTED:")
+                                _promptRejection.value = rejectionReason
+                            } else if (errorMessage.startsWith("API Error:")) {
+                                // Convert different API errors to user-friendly messages
+                                val userFriendlyMessage = when {
+                                    errorMessage.contains("529") || errorMessage.contains("overloaded_error") ||
+                                    errorMessage.contains("Overloaded") -> "Claude is temporarily overloaded. Please try again in a moment."
 
-                                errorMessage.contains("401") || errorMessage.contains("authentication_error") ||
-                                errorMessage.contains("invalid_request_error") -> "Authentication failed. Please check your API key in settings."
+                                    errorMessage.contains("401") || errorMessage.contains("authentication_error") ||
+                                    errorMessage.contains("invalid_request_error") -> "Authentication failed. Please check your API key in settings."
 
-                                errorMessage.contains("403") || errorMessage.contains("permission_error") ->
-                                "Access denied. Please check your API key permissions."
+                                    errorMessage.contains("403") || errorMessage.contains("permission_error") ->
+                                    "Access denied. Please check your API key permissions."
 
-                                errorMessage.contains("429") || errorMessage.contains("rate_limit_error") ->
-                                "Rate limit exceeded. Please wait a moment before trying again."
+                                    errorMessage.contains("429") || errorMessage.contains("rate_limit_error") ->
+                                    "Rate limit exceeded. Please wait a moment before trying again."
 
-                                errorMessage.contains("500") || errorMessage.contains("502") || errorMessage.contains("503") ||
-                                errorMessage.contains("server_error") -> "Server error. Please try again later."
+                                    errorMessage.contains("500") || errorMessage.contains("502") || errorMessage.contains("503") ||
+                                    errorMessage.contains("server_error") -> "Server error. Please try again later."
 
-                                errorMessage.contains("400") || errorMessage.contains("invalid_request_error") ->
-                                "Invalid request. Please try rephrasing your prompt."
+                                    errorMessage.contains("400") || errorMessage.contains("invalid_request_error") ->
+                                    "Invalid request. Please try rephrasing your prompt."
 
-                                errorMessage.contains("413") || errorMessage.contains("request_too_large") ->
-                                "Your prompt is too long. Please try a shorter prompt."
+                                    errorMessage.contains("413") || errorMessage.contains("request_too_large") ->
+                                    "Your prompt is too long. Please try a shorter prompt."
 
-                                errorMessage.contains("422") -> "Request format error. Please try again."
+                                    errorMessage.contains("422") -> "Request format error. Please try again."
 
-                                errorMessage.contains("timeout") || errorMessage.contains("network") ->
-                                "Network timeout. Please check your connection and try again."
+                                    errorMessage.contains("timeout") || errorMessage.contains("network") ->
+                                    "Network timeout. Please check your connection and try again."
 
-                                else -> "Server issue, please try again later"
+                                    else -> "Server issue, please try again later"
+                                }
+                                _error.value = userFriendlyMessage
+                            } else {
+                                _error.value = errorMessage
                             }
-                            _error.value = userFriendlyMessage
-
-                            // Show notification if app is in background
-                            // We'll call this from MainActivity where we have context
-                        } else {
-                            _error.value = errorMessage
+                            _currentHistoryItem.value = null // Clear on error
                         }
-                        _currentHistoryItem.value = null // Clear on error
                     }
                 )
             } finally {
-                _isLoading.value = false
-                _isGenerating.value = false
-                _generationProgress.value = ""
+                // Reset UI state
+                viewModelScope.launch {
+                    _isLoading.value = false
+                    _isGenerating.value = false
+                    _generationProgress.value = ""
+                }
             }
         }
     }

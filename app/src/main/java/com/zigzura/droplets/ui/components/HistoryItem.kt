@@ -1,5 +1,6 @@
 package com.zigzura.droplets.ui.components
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -23,11 +24,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import android.graphics.BitmapFactory
+import android.media.MediaPlayer
+import android.net.Uri
+import android.widget.VideoView
 import com.zigzura.droplets.data.PromptHistory
 import com.zigzura.droplets.utils.ScreenshotUtils
 import java.text.SimpleDateFormat
 import java.util.*
-import android.graphics.BitmapFactory
 
 @Composable
 fun HistoryItem(
@@ -43,6 +48,21 @@ fun HistoryItem(
 
     // Check if this item is still generating
     val isGenerating = historyItem.html == "GENERATING..."
+
+    // Check if this item is new (never used - accessCount < 1)
+    val isNewItem = (historyItem.accessCount ?: 0) < 1 && !isGenerating && historyItem.html != "GENERATING..."
+
+    // Animated gradient for generating items
+    val infiniteTransition = rememberInfiniteTransition(label = "generating")
+    val animatedOffset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "gradientOffset"
+    )
 
     // Load screenshot if available
     val screenshotBitmap = remember(historyItem.id) {
@@ -97,17 +117,104 @@ fun HistoryItem(
 
             // Fallback background if no screenshot
             if (screenshotBitmap == null) {
+                if (isGenerating) {
+                    // Video background for generating items
+                    AndroidView(
+                        factory = { context ->
+                            VideoView(context).apply {
+                                // Set up the video from assets
+                                val uri = Uri.parse("android.resource://${context.packageName}/raw/generating_video")
+                                setVideoURI(uri)
+
+                                // Configure video playback
+                                setOnPreparedListener { mediaPlayer ->
+                                    mediaPlayer.isLooping = true
+                                    mediaPlayer.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING)
+                                    start()
+                                }
+
+                                // Mute the video (no sound)
+                                setOnPreparedListener { mediaPlayer ->
+                                    mediaPlayer.isLooping = true
+                                    mediaPlayer.setAudioAttributes(null)
+                                    mediaPlayer.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING)
+                                    start()
+                                }
+
+                                // Start immediately if possible
+                                start()
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(12.dp))
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                if (historyItem.favorite == true)
+                                    MaterialTheme.colorScheme.primaryContainer
+                                else
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                    )
+                }
+            }
+
+            // Animated gradient overlay for generating items (even with screenshots)
+            if (isGenerating) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
-                            if (historyItem.favorite == true)
-                                MaterialTheme.colorScheme.primaryContainer
-                            else
-                                MaterialTheme.colorScheme.surfaceVariant,
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFF6366F1).copy(alpha = 0.1f),
+                                    Color.Transparent,
+                                    Color(0xFF8B5CF6).copy(alpha = 0.1f),
+                                    Color.Transparent,
+                                    Color(0xFFA855F7).copy(alpha = 0.1f)
+                                ),
+                                start = androidx.compose.ui.geometry.Offset(
+                                    animatedOffset * 300f - 150f,
+                                    0f
+                                ),
+                                end = androidx.compose.ui.geometry.Offset(
+                                    animatedOffset * 300f + 150f,
+                                    150f
+                                )
+                            ),
                             shape = RoundedCornerShape(12.dp)
                         )
                 )
+            }
+
+            // NEW badge for unused items
+            if (isNewItem) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                ) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFFEF4444)
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Text(
+                            text = "NEW",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
             }
 
             // Content overlay
