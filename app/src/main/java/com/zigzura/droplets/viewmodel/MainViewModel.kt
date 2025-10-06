@@ -171,6 +171,12 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun incrementAccessCount(id: String) {
+        viewModelScope.launch {
+            preferencesManager.incrementAccessCount(id)
+        }
+    }
+
     fun loadHistoryItem(historyItem: PromptHistory) {
         _currentHtml.value = historyItem.html
         _currentHistoryItem.value = historyItem // Track the loaded history item

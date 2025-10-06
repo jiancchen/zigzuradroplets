@@ -65,7 +65,10 @@ fun StacksScreen(
     onNavigateToApp: (String) -> Unit = {},
     onNavigateToMain: () -> Unit = {},
     onNavigateToCreate: () -> Unit = {},
-    onNavigateToSettings: () -> Unit = {}
+    onNavigateToSettings: () -> Unit = {},
+    isGenerating: Boolean = false, // Add generation state
+    currentGeneratingItemId: String? = null, // Add current generating item ID
+    onShowSnackbar: (String) -> Unit = {} // Add snackbar callback
 ) {
     // Use actual prompt history or sample data if empty
     val historyItems = promptHistory.ifEmpty {
@@ -123,6 +126,9 @@ fun StacksScreen(
         Scrollable3DStack(
             items = filteredItems,
             onNavigateToApp = onNavigateToApp,
+            isGenerating = isGenerating,
+            currentGeneratingItemId = currentGeneratingItemId,
+            onShowSnackbar = onShowSnackbar,
             modifier = Modifier.fillMaxSize()
         )
 
@@ -174,6 +180,9 @@ fun StacksScreen(
 fun Scrollable3DStack(
     items: List<PromptHistory>,
     onNavigateToApp: (String) -> Unit = {},
+    isGenerating: Boolean = false, // Add generation state
+    currentGeneratingItemId: String? = null, // Add current generating item ID
+    onShowSnackbar: (String) -> Unit = {}, // Add snackbar callback
     modifier: Modifier = Modifier
 ) {
     val listState = rememberScrollStateWithPreservation()
@@ -281,6 +290,8 @@ fun Scrollable3DStack(
                     rotationY = rotationY,
                     backgroundColor = Color.Black,
                     onNavigateToApp = onNavigateToApp,
+                    isCurrentlyGenerating = isGenerating && currentGeneratingItemId == item.id,
+                    onShowSnackbar = onShowSnackbar,
                     modifier = Modifier
                         .fillMaxSize()
                         .then(

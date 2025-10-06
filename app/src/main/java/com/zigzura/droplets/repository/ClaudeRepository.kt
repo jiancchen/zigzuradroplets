@@ -84,8 +84,12 @@ class ClaudeRepository(private val preferencesManager: PreferencesManager) {
                     return Result.failure(Exception("PROMPT_REJECTED:$rejectionReason"))
                 }
 
-                // Save to history using the pre-generated UUID
-                val promptHistory = preferencesManager.savePrompt(uuid, prompt, htmlContent, model = request.model)
+                // Update the existing history entry instead of creating a new one
+                val promptHistory = preferencesManager.updatePromptHistoryContent(
+                    id = uuid,
+                    html = htmlContent,
+                    model = request.model
+                ) ?: return Result.failure(Exception("Failed to update prompt history"))
 
                 // Return either debug HTML or original content based on flag
                 val finalHtml = if (enableDebug) {
@@ -264,13 +268,12 @@ class ClaudeRepository(private val preferencesManager: PreferencesManager) {
         // Get user's preferred model from preferences (for consistency)
         val selectedModel = preferencesManager.claudeModel.first()
 
-        // Save to history using the pre-generated UUID
-        val promptHistory = preferencesManager.savePrompt(
-            uuid = uuid,
-            prompt = prompt,
+        // Update the existing history entry instead of creating a new one
+        val promptHistory = preferencesManager.updatePromptHistoryContent(
+            id = uuid,
             html = htmlContent,
             model = "$selectedModel (fake)"
-        )
+        ) ?: return Result.failure(Exception("Failed to update prompt history"))
 
         Log.d("ClaudeRepository", "🎭 FAKE API: Generated ${htmlContent.length} chars of HTML")
 

@@ -16,6 +16,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -199,23 +200,41 @@ fun DropletsNavigation() {
         composable(Screen.Stacks.route) {
             val viewModel: MainViewModel = hiltViewModel()
             val promptHistory by viewModel.promptHistory.collectAsState(initial = emptyList())
+            val isGenerating by viewModel.isGenerating.collectAsState()
+            val currentHistoryItem by viewModel.currentHistoryItem.collectAsState()
 
-            StacksScreen(
-                promptHistory = promptHistory,
-                onNavigateToApp = { appId ->
-                    navController.navigate(Screen.AppView.createRoute(appId))
-                },
-                onNavigateToMain = {
-                    // Don't navigate if already on Stacks screen - just close the FAB
-                    // This prevents adding multiple entries to the stack
-                },
-                onNavigateToCreate = {
-                    navController.navigate(Screen.Create.route)
-                },
-                onNavigateToSettings = {
-                    navController.navigate(Screen.Settings.route)
-                }
-            )
+            // State for snackbar
+            val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
+            val scope = rememberCoroutineScope()
+
+            // Scaffold with snackbar support
+            androidx.compose.material3.Scaffold(
+                snackbarHost = { androidx.compose.material3.SnackbarHost(hostState = snackbarHostState) }
+            ) { paddingValues ->
+                StacksScreen(
+                    promptHistory = promptHistory,
+                    onNavigateToApp = { appId ->
+                        navController.navigate(Screen.AppView.createRoute(appId))
+                    },
+                    onNavigateToMain = {
+                        // Don't navigate if already on Stacks screen - just close the FAB
+                        // This prevents adding multiple entries to the stack
+                    },
+                    onNavigateToCreate = {
+                        navController.navigate(Screen.Create.route)
+                    },
+                    onNavigateToSettings = {
+                        navController.navigate(Screen.Settings.route)
+                    },
+                    isGenerating = isGenerating,
+                    currentGeneratingItemId = currentHistoryItem?.id,
+                    onShowSnackbar = { message ->
+                        scope.launch {
+                            snackbarHostState.showSnackbar(message)
+                        }
+                    }
+                )
+            }
         }
 
         composable(
@@ -234,6 +253,8 @@ fun DropletsNavigation() {
                 LaunchedEffect(appId) {
                     if (currentHtml.isEmpty() || viewModel.currentHistoryItem.value?.id != appId) {
                         viewModel.loadHistoryItem(historyItem)
+                        // Increment access count when app is opened
+                        viewModel.incrementAccessCount(appId)
                     }
                 }
 

@@ -89,7 +89,7 @@ fun MostUsedAppCard(
 
             // App title with proper width and ellipsization - placed AFTER overlay so it renders on top
             Text(
-                text = historyItem.title ?: historyItem.prompt,
+                text = if (historyItem.title?.isNotEmpty() == true) historyItem.title else historyItem.prompt,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.White,

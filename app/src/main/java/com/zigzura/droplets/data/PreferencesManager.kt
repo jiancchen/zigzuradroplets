@@ -162,4 +162,45 @@ class PreferencesManager(private val context: Context) {
             preferences.remove(PROMPT_HISTORY)
         }
     }
+
+    suspend fun updatePromptHistoryContent(id: String, html: String, title: String = "", model: String = ""): PromptHistory? {
+        var updatedItem: PromptHistory? = null
+        context.dataStore.edit { preferences ->
+            val currentJson = preferences[PROMPT_HISTORY] ?: "[]"
+            val type = object : TypeToken<List<PromptHistory>>() {}.type
+            val currentList: MutableList<PromptHistory> = gson.fromJson(currentJson, type) ?: mutableListOf()
+
+            val index = currentList.indexOfFirst { it.id == id }
+            if (index != -1) {
+                val item = currentList[index]
+                updatedItem = item.copy(
+                    html = html,
+                    title = title.ifEmpty { item.title ?: "" },
+                    model = model.ifEmpty { item.model ?: "" },
+                    timestamp = System.currentTimeMillis() // Update timestamp when content is finalized
+                )
+                currentList[index] = updatedItem!!
+                preferences[PROMPT_HISTORY] = gson.toJson(currentList)
+            }
+        }
+        return updatedItem
+    }
+
+    suspend fun incrementAccessCount(id: String) {
+        context.dataStore.edit { preferences ->
+            val currentJson = preferences[PROMPT_HISTORY] ?: "[]"
+            val type = object : TypeToken<List<PromptHistory>>() {}.type
+            val currentList: MutableList<PromptHistory> = gson.fromJson(currentJson, type) ?: mutableListOf()
+
+            val index = currentList.indexOfFirst { it.id == id }
+            if (index != -1) {
+                val item = currentList[index]
+                currentList[index] = item.copy(
+                    accessCount = (item.accessCount ?: 0) + 1,
+                    lastUsed = System.currentTimeMillis()
+                )
+                preferences[PROMPT_HISTORY] = gson.toJson(currentList)
+            }
+        }
+    }
 }

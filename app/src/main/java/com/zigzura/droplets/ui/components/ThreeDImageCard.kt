@@ -1,5 +1,11 @@
 package com.zigzura.droplets.ui.components
 
+import android.media.MediaPlayer
+import android.net.Uri
+import android.util.Log
+import android.widget.VideoView
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zigzura.droplets.cache.OptimizedImageLoader
 import com.zigzura.droplets.data.PromptHistory
+import androidx.compose.ui.viewinterop.AndroidView
 
 @Composable
 fun ThreeDImageCard(
@@ -38,7 +45,9 @@ fun ThreeDImageCard(
     rotationY: Float,
     backgroundColor: Color = Color.Black,
     modifier: Modifier = Modifier,
-    onNavigateToApp: (String) -> Unit = {}
+    onNavigateToApp: (String) -> Unit = {},
+    isCurrentlyGenerating: Boolean = false, // Add generation state parameter
+    onShowSnackbar: (String) -> Unit = {} // Add snackbar callback
 ) {
     val context = LocalContext.current
 
@@ -58,7 +67,23 @@ fun ThreeDImageCard(
     }
 
     val displayTitle = historyItem.title?.takeIf { it.isNotBlank() }
-        ?: historyItem.prompt.take(50) + "..."
+        ?: (historyItem.prompt.take(50) + "...")
+
+    // Check if this item is generating - either currently generating or has "GENERATING..." HTML
+    val isGenerating = isCurrentlyGenerating || historyItem.html == "GENERATING..."
+
+    // Check if this item is new (never accessed and not generating)
+    val isNewItem = (historyItem.accessCount ?: 0) < 1 && !isGenerating
+
+    // Log for debugging
+    Log.d("ThreeDImageCard", "Item ${historyItem.id}: isCurrentlyGenerating=$isCurrentlyGenerating, html=${historyItem.html}, isGenerating=$isGenerating")
+
+    // Video fade animation
+    val videoAlpha by animateFloatAsState(
+        targetValue = if (isGenerating) 1f else 0f,
+        animationSpec = tween(durationMillis = 1000),
+        label = "videoFade"
+    )
 
     Box(
         modifier = modifier
@@ -69,8 +94,37 @@ fun ThreeDImageCard(
             }
             .clip(RoundedCornerShape(16.dp))
     ) {
-        // Background image or color
+        // Background image, video, or color
         when {
+            isGenerating && screenshotBitmap == null -> {
+                // Video background for generating items without screenshots
+                Log.d("ThreeDImageCard", "Loading generating video background for item ${historyItem.id}")
+                AndroidView(
+                    factory = { context ->
+                        VideoView(context).apply {
+                            // Set up the video from assets
+                            val uri = Uri.parse("android.resource://${context.packageName}/raw/generating_video")
+                            setVideoURI(uri)
+
+                            // Configure video playback
+                            setOnPreparedListener { mediaPlayer ->
+                                mediaPlayer.isLooping = true
+                                mediaPlayer.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING)
+                                // Mute the video by setting volume to 0 instead of setting AudioAttributes to null
+                                mediaPlayer.setVolume(0f, 0f)
+                                start()
+                            }
+
+                            // Start immediately if possible
+                            start()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(16.dp))
+                        .graphicsLayer { alpha = videoAlpha }, // Apply video fade animation
+                )
+            }
             screenshotBitmap != null -> {
                 Image(
                     bitmap = screenshotBitmap!!,
@@ -113,8 +167,40 @@ fun ThreeDImageCard(
                         endY = Float.POSITIVE_INFINITY
                     )
                 )
-                .clickable { onNavigateToApp(historyItem.id) }
+                .clickable {
+                    // Show snackbar message when clicking on generating items
+                    if (isGenerating) {
+                        onShowSnackbar("Item is still generating, please wait...")
+                    } else {
+                        onNavigateToApp(historyItem.id)
+                    }
+                }
         )
+
+        // NEW badge for unused items
+        if (isNewItem) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+            ) {
+                androidx.compose.material3.Card(
+                    colors = androidx.compose.material3.CardDefaults.cardColors(
+                        containerColor = Color(0xFFEF4444)
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Text(
+                        text = "NEW",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+        }
 
         // Text content with improved contrast
         Box(
