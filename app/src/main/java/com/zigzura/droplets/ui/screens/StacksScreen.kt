@@ -10,23 +10,35 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -35,12 +47,14 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.geometry.Offset
 import com.zigzura.droplets.data.PromptHistory
 import com.zigzura.droplets.utils.ScreenshotUtils
 import kotlinx.coroutines.Dispatchers
@@ -65,21 +79,46 @@ fun StacksScreen(
                 id = "sample1",
                 prompt = "Create your first app",
                 html = "",
-                title = "Sample App 1"
+                title = "Sample App 1",
+                favorite = true
             ),
             PromptHistory(
                 id = "sample2",
                 prompt = "Apps will appear here",
                 html = "",
-                title = "Sample App 2"
+                title = "Sample App 2",
+                favorite = false
             ),
             PromptHistory(
                 id = "sample3",
                 prompt = "Start generating content",
                 html = "",
-                title = "Sample App 3"
+                title = "Sample App 3",
+                favorite = true
             )
         )
+    }
+
+    var searchText by remember { mutableStateOf(TextFieldValue("")) }
+    var showFavorites by remember { mutableStateOf(false) }
+    var isSearchActive by remember { mutableStateOf(false) }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusRequester = remember { FocusRequester() }
+
+    // Filter items based on search or favorites
+    val filteredItems = remember(historyItems, searchText, showFavorites, isSearchActive) {
+        when {
+            isSearchActive && searchText.text.isNotBlank() -> {
+                historyItems.filter { item ->
+                    item.title?.contains(searchText.text, ignoreCase = true) == true ||
+                    item.prompt.contains(searchText.text, ignoreCase = true)
+                }
+            }
+            showFavorites -> {
+                historyItems.filter { it.favorite == true }
+            }
+            else -> historyItems
+        }
     }
 
     Box(
@@ -87,10 +126,44 @@ fun StacksScreen(
             .fillMaxSize()
             .background(Color(0xFFFFD84E))
     ) {
+        // Main 3D Stack
         Scrollable3DStack(
-            items = historyItems,
+            items = filteredItems,
             onNavigateToApp = onNavigateToApp,
             modifier = Modifier.fillMaxSize()
+        )
+
+        // Search bar at the top
+        SearchBarWithFavorites(
+            searchText = searchText,
+            onSearchTextChange = {
+                searchText = it
+                isSearchActive = it.text.isNotBlank()
+                if (!isSearchActive) {
+                    showFavorites = false
+                }
+            },
+            showFavorites = showFavorites,
+            onToggleFavorites = {
+                showFavorites = !showFavorites
+                if (showFavorites) {
+                    isSearchActive = false
+                    searchText = TextFieldValue("")
+                    keyboardController?.hide()
+                }
+            },
+            onClearSearch = {
+                searchText = TextFieldValue("")
+                isSearchActive = false
+                showFavorites = false
+                keyboardController?.hide()
+            },
+            favoriteItems = historyItems.filter { it.favorite == true },
+            onNavigateToApp = onNavigateToApp,
+            focusRequester = focusRequester,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(16.dp)
         )
 
         // Add floating navigation toolbar
@@ -586,6 +659,188 @@ fun StacksFloatingMenuItem(
                 imageVector = icon,
                 contentDescription = label,
                 modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun SearchBarWithFavorites(
+    searchText: TextFieldValue,
+    onSearchTextChange: (TextFieldValue) -> Unit,
+    showFavorites: Boolean,
+    onToggleFavorites: () -> Unit,
+    onClearSearch: () -> Unit,
+    favoriteItems: List<PromptHistory>,
+    onNavigateToApp: (String) -> Unit,
+    focusRequester: FocusRequester,
+    modifier: Modifier = Modifier
+) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    Column(modifier = modifier) {
+        // Semi-transparent white pill search bar
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(28.dp),
+            color = Color.White.copy(alpha = 0.9f),
+            shadowElevation = 4.dp
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Logo/Star icon (clickable to show favorites)
+                IconButton(
+                    onClick = onToggleFavorites,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "Show favorites",
+                        tint = if (showFavorites) Color(0xFFFFB74D) else Color.Gray,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Search text field
+                OutlinedTextField(
+                    value = searchText,
+                    onValueChange = onSearchTextChange,
+                    modifier = Modifier
+                        .weight(1f)
+                        .focusRequester(focusRequester),
+                    placeholder = {
+                        Text(
+                            text = "Search your apps...",
+                            color = Color.Gray,
+                            fontSize = 16.sp
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    trailingIcon = {
+                        if (searchText.text.isNotBlank()) {
+                            IconButton(onClick = onClearSearch) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Clear search",
+                                    tint = Color.Gray,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = Color(0xFFFF8A65)
+                    ),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Search
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSearch = {
+                            keyboardController?.hide()
+                        }
+                    )
+                )
+            }
+        }
+
+        // White box with favorites (shown when favorites are active and no typing)
+        AnimatedVisibility(
+            visible = showFavorites && searchText.text.isBlank() && favoriteItems.isNotEmpty(),
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = Color.White.copy(alpha = 0.95f),
+                shadowElevation = 4.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Favorite Apps",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black.copy(alpha = 0.8f),
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        items(favoriteItems.size) { index ->
+                            FavoriteAppCard(
+                                historyItem = favoriteItems[index],
+                                onNavigateToApp = onNavigateToApp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FavoriteAppCard(
+    historyItem: PromptHistory,
+    onNavigateToApp: (String) -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .size(width = 120.dp, height = 80.dp)
+            .clickable { onNavigateToApp(historyItem.id) },
+        shape = RoundedCornerShape(12.dp),
+        color = Color.White.copy(alpha = 0.8f),
+        shadowElevation = 2.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = "Favorite app",
+                tint = Color(0xFFFFB74D),
+                modifier = Modifier.size(24.dp)
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = historyItem.title?.take(15) ?: historyItem.prompt.take(15),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black.copy(alpha = 0.8f),
+                maxLines = 2,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
     }
