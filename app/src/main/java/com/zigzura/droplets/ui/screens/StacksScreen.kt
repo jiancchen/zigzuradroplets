@@ -56,6 +56,7 @@ import com.zigzura.droplets.R
 import com.zigzura.droplets.data.PromptHistory
 import com.zigzura.droplets.ui.components.SearchBarWithFavorites
 import com.zigzura.droplets.ui.components.ThreeDImageCard
+import com.zigzura.droplets.ui.theme.AppColors
 import com.zigzura.droplets.utils.rememberScrollStateWithPreservation
 import kotlinx.coroutines.delay
 
@@ -121,7 +122,7 @@ fun StacksScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFD84E))
+            .background(AppColors.Primary)
     ) {
         // Full-screen backdrop overlay when FAB is expanded - positioned first to be behind everything
         AnimatedVisibility(
@@ -132,7 +133,7 @@ fun StacksScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.3f))
+                    .background(AppColors.BackdropOverlay)
             )
         }
 
@@ -206,12 +207,7 @@ fun Scrollable3DStack(
     // Stable color array - only recreated when items change
     val backgroundColors = remember(items) {
         items.mapIndexed { index, _ ->
-            val colors = listOf(
-                Color(0xFFE91E63), Color(0xFF9C27B0), Color(0xFF673AB7), Color(0xFF3F51B5),
-                Color(0xFF2196F3), Color(0xFF00BCD4), Color(0xFF009688), Color(0xFF4CAF50),
-                Color(0xFF8BC34A), Color(0xFFFF9800), Color(0xFFFF5722), Color(0xFFF44336)
-            )
-            colors[index % colors.size]
+            AppColors.StackColors[index % AppColors.StackColors.size]
         }
     }
 
@@ -364,7 +360,7 @@ fun StacksFloatingToolbar(
                 StacksFloatingMenuItem(
                     icon = Icons.Default.Home,
                     label = "My Apps",
-                    backgroundColor = Color(0xFFFF8F00), // Dark orange
+                    backgroundColor = AppColors.FABDarkOrange,
                     onClick = {
                         onNavigateToMain()
                         onExpandedChange(false)
@@ -373,7 +369,7 @@ fun StacksFloatingToolbar(
                 StacksFloatingMenuItem(
                     icon = Icons.Default.Add,
                     label = "Create",
-                    backgroundColor = Color(0xFFFF6F00), // Darker orange
+                    backgroundColor = AppColors.FABDarkerOrange,
                     onClick = {
                         onNavigateToCreate()
                         onExpandedChange(false)
@@ -382,7 +378,7 @@ fun StacksFloatingToolbar(
                 StacksFloatingMenuItem(
                     icon = Icons.Default.Settings,
                     label = "Settings",
-                    backgroundColor = Color(0xFFE65100), // Deep orange
+                    backgroundColor = AppColors.FABDeepOrange,
                     onClick = {
                         onNavigateToSettings()
                         onExpandedChange(false)
@@ -394,8 +390,8 @@ fun StacksFloatingToolbar(
         // Main FAB - positioned at the bottom of the column
         FloatingActionButton(
             onClick = { onExpandedChange(!isExpanded) },
-            containerColor = Color(0xFFFFB74D), // Golden yellow to match your theme
-            contentColor = Color.White, // White icon for contrast
+            containerColor = AppColors.FABMain,
+            contentColor = AppColors.White,
             elevation = FloatingActionButtonDefaults.elevation(
                 defaultElevation = 8.dp,
                 pressedElevation = 12.dp
@@ -415,7 +411,7 @@ fun StacksFloatingMenuItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     onClick: () -> Unit,
-    backgroundColor: Color = Color(0xFFFF8F00) // Default dark orange
+    backgroundColor: Color = AppColors.FABDarkOrange // Use AppColors instead of hardcoded default
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -423,25 +419,25 @@ fun StacksFloatingMenuItem(
     ) {
         Surface(
             shape = RoundedCornerShape(8.dp),
-            color = backgroundColor, // Use dark orange/yellow shade
+            color = backgroundColor,
             tonalElevation = 2.dp,
             shadowElevation = 4.dp,
-            modifier = Modifier.width(100.dp) // Fixed width to prevent jarring text differences
+            modifier = Modifier.width(100.dp)
         ) {
             Text(
                 text = label,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 style = MaterialTheme.typography.labelLarge,
-                color = Color.White, // White text for contrast on dark background
+                color = AppColors.White, // Use AppColors instead of hardcoded Color.White
                 fontWeight = FontWeight.Medium,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center // Center align for consistency
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
 
         SmallFloatingActionButton(
             onClick = onClick,
-            containerColor = backgroundColor, // Match the text background color
-            contentColor = Color.White, // White icon for contrast
+            containerColor = backgroundColor,
+            contentColor = AppColors.White, // Use AppColors instead of hardcoded Color.White
             elevation = FloatingActionButtonDefaults.elevation(
                 defaultElevation = 4.dp,
                 pressedElevation = 8.dp
@@ -495,7 +491,7 @@ fun PreviewScrollable3DStack() {
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFD84E))
+            .background(AppColors.Primary)
     ) {
         Scrollable3DStack(cards)
     }

@@ -427,14 +427,22 @@ fun AppSettingsDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         BoxWithConstraints {
-            val dialogWidth = if (maxWidth > 600.dp) 0.6f else 0.95f
-            val dialogHeight = if (maxWidth > 600.dp) 0.9f else 0.8f
+            // Much more aggressive sizing for wide screens
+            val dialogWidth = when {
+                maxWidth > 800.dp -> 0.85f  // Very wide screens (tablets, foldables)
+                maxWidth > 600.dp -> 0.8f   // Wide screens (landscape phones)
+                else -> 0.95f               // Narrow screens
+            }
+            val dialogHeight = when {
+                maxWidth > 600.dp -> 0.95f  // Use almost full height on wide screens
+                else -> 0.85f               // Slightly less on narrow screens
+            }
 
             Card(
                 modifier = Modifier
                     .fillMaxWidth(dialogWidth)
                     .fillMaxHeight(dialogHeight)
-                    .padding(8.dp),
+                    .padding(4.dp), // Reduced padding to maximize space
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
                 shape = RoundedCornerShape(20.dp)
@@ -454,44 +462,23 @@ fun AppSettingsDialog(
                             modifier = Modifier.padding(bottom = 20.dp)
                         )
 
-                        // Title editing section with inline save button
-                        Row(
+                        // Title editing section with auto-save
+                        OutlinedTextField(
+                            value = titleText,
+                            onValueChange = { newValue ->
+                                titleText = newValue
+                                // Auto-save when user types
+                                onUpdateTitle(historyItem.id, newValue.trim())
+                            },
+                            placeholder = { Text("Enter a title for this app...") },
+                            singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            OutlinedTextField(
-                                value = titleText,
-                                onValueChange = { titleText = it },
-                                placeholder = { Text("Enter a title for this app...") },
-                                singleLine = true,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(end = 8.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF6366F1),
-                                    unfocusedBorderColor = Color(0xFFE2E8F0)
-                                ),
-                                shape = RoundedCornerShape(12.dp)
-                            )
-
-                            Button(
-                                onClick = {
-                                    onUpdateTitle(historyItem.id, titleText.trim())
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF6366F1),
-                                    contentColor = Color.White
-                                ),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.height(56.dp) // Match text field height
-                            ) {
-                                Text(
-                                    text = "Save",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp
-                                )
-                            }
-                        }
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF6366F1),
+                                unfocusedBorderColor = Color(0xFFE2E8F0)
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        )
                     }
 
                     // Scrollable content with proper weight
@@ -705,25 +692,7 @@ fun AppSettingsDialog(
                         }
                     }
 
-                    // Fixed bottom action
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(
-                            onClick = onDismiss,
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = Color(0xFF64748B)
-                            )
-                        ) {
-                            Text(
-                                text = "Close",
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
+                    // Remove the fixed bottom action row completely
                 }
             }
         }
