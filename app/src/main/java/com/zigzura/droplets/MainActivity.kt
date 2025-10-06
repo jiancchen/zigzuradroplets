@@ -107,15 +107,13 @@ fun DropletsNavigation() {
                     navController.navigate(Screen.AppView.createRoute(appId))
                 },
                 onNavigateToMain = {
-                    // Navigate back to stacks (or could be a different main screen if you prefer)
-                    navController.navigate(Screen.Stacks.route)
+                    // Don't navigate if already on Stacks screen - just close the FAB
+                    // This prevents adding multiple entries to the stack
                 },
                 onNavigateToCreate = {
                     navController.navigate(Screen.Create.route)
                 },
                 onNavigateToSettings = {
-                    // For now navigate to Debug as a placeholder for settings
-                    // You can create a proper SettingsScreen later
                     navController.navigate(Screen.Settings.route)
                 }
             )

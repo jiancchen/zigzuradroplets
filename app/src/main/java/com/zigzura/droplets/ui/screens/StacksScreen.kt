@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zigzura.droplets.data.PromptHistory
 import com.zigzura.droplets.utils.ScreenshotUtils
+import com.zigzura.droplets.utils.rememberScrollStateWithPreservation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -208,7 +209,7 @@ fun Scrollable3DStack(
     onNavigateToApp: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val listState = rememberLazyListState()
+    val listState = rememberScrollStateWithPreservation()
 
     // Stable color array - only recreated when items change
     val backgroundColors = remember(items) {
