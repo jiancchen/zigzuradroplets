@@ -57,7 +57,7 @@ fun AppViewScreen(
                     )
                 )
         ) {
-            val isWideScreen = maxWidth > 800.dp
+            val isWideScreen = maxWidth > 600.dp
 
             if (isWideScreen) {
                 // Wide screen layout - title bar on left, content on right
@@ -426,121 +426,278 @@ fun AppSettingsDialog(
     val clipboardManager = LocalClipboardManager.current
 
     Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth(0.95f) // Use more screen width
-                .fillMaxHeight(0.8f) // Fill more of the screen height
-                .padding(8.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-            shape = RoundedCornerShape(20.dp)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                // Fixed header that doesn't scroll
-                Column(
-                    modifier = Modifier.padding(24.dp).padding(bottom = 0.dp)
-                ) {
-                    Text(
-                        text = "App Settings",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1E293B),
-                        modifier = Modifier.padding(bottom = 20.dp)
-                    )
+        BoxWithConstraints {
+            val dialogWidth = if (maxWidth > 600.dp) 0.6f else 0.95f
+            val dialogHeight = if (maxWidth > 600.dp) 0.9f else 0.8f
 
-                    // Title editing section with inline save button
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(dialogWidth)
+                    .fillMaxHeight(dialogHeight)
+                    .padding(8.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                shape = RoundedCornerShape(20.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // Fixed header that doesn't scroll
+                    Column(
+                        modifier = Modifier.padding(24.dp).padding(bottom = 0.dp)
                     ) {
-                        OutlinedTextField(
-                            value = titleText,
-                            onValueChange = { titleText = it },
-                            placeholder = { Text("Enter a title for this app...") },
-                            singleLine = true,
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(end = 8.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF6366F1),
-                                unfocusedBorderColor = Color(0xFFE2E8F0)
-                            ),
-                            shape = RoundedCornerShape(12.dp)
+                        Text(
+                            text = "App Settings",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1E293B),
+                            modifier = Modifier.padding(bottom = 20.dp)
                         )
 
-                        Button(
-                            onClick = {
-                                onUpdateTitle(historyItem.id, titleText.trim())
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF6366F1),
-                                contentColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.height(56.dp) // Match text field height
-                        ) {
-                            Text(
-                                text = "Save",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
-                            )
-                        }
-                    }
-                }
-
-                // Scrollable content
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-                    item {
-                        // Original prompt section (scrollable, max 4 lines)
-                        Card(
+                        // Title editing section with inline save button
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                            shape = RoundedCornerShape(12.dp)
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp)
+                            OutlinedTextField(
+                                value = titleText,
+                                onValueChange = { titleText = it },
+                                placeholder = { Text("Enter a title for this app...") },
+                                singleLine = true,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFF6366F1),
+                                    unfocusedBorderColor = Color(0xFFE2E8F0)
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+
+                            Button(
+                                onClick = {
+                                    onUpdateTitle(historyItem.id, titleText.trim())
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF6366F1),
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.height(56.dp) // Match text field height
                             ) {
                                 Text(
-                                    text = historyItem.prompt,
-                                    fontSize = 14.sp,
-                                    color = Color(0xFF475569),
-                                    lineHeight = 20.sp,
-                                    maxLines = 4,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.padding(bottom = 12.dp)
+                                    text = "Save",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
                                 )
+                            }
+                        }
+                    }
 
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.End
+                    // Scrollable content with proper weight
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 24.dp)
+                            .fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(20.dp),
+                        contentPadding = PaddingValues(vertical = 16.dp)
+                    ) {
+                        item {
+                            // Original prompt section (scrollable, expandable)
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp)
                                 ) {
-                                    TextButton(
-                                        onClick = {
-                                            clipboardManager.setText(AnnotatedString(historyItem.prompt))
-                                        },
-                                        colors = ButtonDefaults.textButtonColors(
-                                            contentColor = Color(0xFF6366F1)
-                                        )
+                                    Text(
+                                        text = "Original Prompt",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF1E293B),
+                                        modifier = Modifier.padding(bottom = 8.dp)
+                                    )
+
+                                    Text(
+                                        text = historyItem.prompt,
+                                        fontSize = 14.sp,
+                                        color = Color(0xFF475569),
+                                        lineHeight = 20.sp,
+                                        modifier = Modifier.padding(bottom = 12.dp)
+                                    )
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.End
                                     ) {
-                                        Icon(
-                                            Icons.Default.Share,
-                                            contentDescription = "Copy prompt",
-                                            modifier = Modifier
-                                                .size(16.dp)
-                                                .padding(end = 4.dp)
-                                        )
+                                        TextButton(
+                                            onClick = {
+                                                clipboardManager.setText(AnnotatedString(historyItem.prompt))
+                                            },
+                                            colors = ButtonDefaults.textButtonColors(
+                                                contentColor = Color(0xFF6366F1)
+                                            )
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Share,
+                                                contentDescription = "Copy prompt",
+                                                modifier = Modifier
+                                                    .size(16.dp)
+                                                    .padding(end = 4.dp)
+                                            )
+                                            Text(
+                                                text = "Copy",
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        item {
+                            // Model used section
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9)),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp)
+                                ) {
+                                    Text(
+                                        text = "AI Model Used",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF1E293B),
+                                        modifier = Modifier.padding(bottom = 8.dp)
+                                    )
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
                                         Text(
-                                            text = "Copy",
+                                            text = historyItem.model ?: "claude-3-haiku-20240307",
                                             fontSize = 14.sp,
-                                            fontWeight = FontWeight.Medium
+                                            fontWeight = FontWeight.Medium,
+                                            color = Color(0xFF475569),
+                                            modifier = Modifier.weight(1f)
+                                        )
+
+                                        // Badge to indicate model type
+                                        Card(
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = when {
+                                                    historyItem.model?.contains("opus") == true -> Color(0xFF7C3AED)
+                                                    historyItem.model?.contains("sonnet") == true -> Color(0xFF059669)
+                                                    historyItem.model?.contains("haiku") == true -> Color(0xFF2563EB)
+                                                    else -> Color(0xFF6B7280)
+                                                }
+                                            ),
+                                            shape = RoundedCornerShape(8.dp)
+                                        ) {
+                                            Text(
+                                                text = when {
+                                                    historyItem.model?.contains("opus") == true -> "OPUS"
+                                                    historyItem.model?.contains("sonnet") == true -> "SONNET"
+                                                    historyItem.model?.contains("haiku") == true -> "HAIKU"
+                                                    else -> "CLAUDE"
+                                                },
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        item {
+                            // Creation date section
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F9FF)),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp)
+                                ) {
+                                    Text(
+                                        text = "Created",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF1E293B),
+                                        modifier = Modifier.padding(bottom = 8.dp)
+                                    )
+
+                                    Text(
+                                        text = SimpleDateFormat("EEEE, MMMM dd, yyyy 'at' h:mm a", Locale.getDefault())
+                                            .format(Date(historyItem.timestamp)),
+                                        fontSize = 14.sp,
+                                        color = Color(0xFF475569)
+                                    )
+                                }
+                            }
+                        }
+
+                        item {
+                            // Delete app section
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp)
+                                ) {
+                                    Text(
+                                        text = "Danger Zone",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF7F1D1D),
+                                        modifier = Modifier.padding(bottom = 8.dp)
+                                    )
+
+                                    Text(
+                                        text = "Delete this app permanently",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color(0xFF7F1D1D),
+                                        modifier = Modifier.padding(bottom = 8.dp)
+                                    )
+
+                                    Text(
+                                        text = "This action cannot be undone. The app and all its data will be permanently removed.",
+                                        fontSize = 12.sp,
+                                        color = Color(0xFF991B1B),
+                                        lineHeight = 16.sp,
+                                        modifier = Modifier.padding(bottom = 16.dp)
+                                    )
+
+                                    Button(
+                                        onClick = { showDeleteConfirmation = true },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(0xFFEF4444),
+                                            contentColor = Color.White
+                                        ),
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(
+                                            text = "Delete App",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp
                                         )
                                     }
                                 }
@@ -548,121 +705,24 @@ fun AppSettingsDialog(
                         }
                     }
 
-                    item {
-                        // Model used section
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9)),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = historyItem.model ?: "claude-3-haiku-20240307",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF475569),
-                                    modifier = Modifier.weight(1f)
-                                )
-
-                                // Badge to indicate model type
-                                Card(
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = when {
-                                            historyItem.model?.contains("opus") == true -> Color(0xFF7C3AED)
-                                            historyItem.model?.contains("sonnet") == true -> Color(0xFF059669)
-                                            historyItem.model?.contains("haiku") == true -> Color(0xFF2563EB)
-                                            else -> Color(0xFF6B7280)
-                                        }
-                                    ),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Text(
-                                        text = when {
-                                            historyItem.model?.contains("opus") == true -> "OPUS"
-                                            historyItem.model?.contains("sonnet") == true -> "SONNET"
-                                            historyItem.model?.contains("haiku") == true -> "HAIKU"
-                                            else -> "CLAUDE"
-                                        },
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    item {
-                        // Delete app section
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Text(
-                                    text = "Delete this app permanently",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF7F1D1D),
-                                    modifier = Modifier.padding(bottom = 8.dp)
-                                )
-
-                                Text(
-                                    text = "This action cannot be undone. The app and all its data will be permanently removed.",
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF991B1B),
-                                    lineHeight = 16.sp,
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                )
-
-                                Button(
-                                    onClick = { showDeleteConfirmation = true },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFFEF4444),
-                                        contentColor = Color.White
-                                    ),
-                                    shape = RoundedCornerShape(8.dp),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(
-                                        text = "Delete App",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Fixed bottom action
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(
-                        onClick = onDismiss,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = Color(0xFF64748B)
-                        )
+                    // Fixed bottom action
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalArrangement = Arrangement.End
                     ) {
-                        Text(
-                            text = "Close",
-                            fontWeight = FontWeight.Medium
-                        )
+                        TextButton(
+                            onClick = onDismiss,
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = Color(0xFF64748B)
+                            )
+                        ) {
+                            Text(
+                                text = "Close",
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
             }

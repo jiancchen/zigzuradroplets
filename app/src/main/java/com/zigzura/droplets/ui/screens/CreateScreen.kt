@@ -431,8 +431,8 @@ fun StyleCard(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val backgroundColor = if (isSelected) Color(0xFFFFB74D) else Color.White
-    val textColor = if (isSelected) Color.White else Color.Black.copy(alpha = 0.8f)
+    val backgroundColor = if (isSelected) Color(0xFFFFF3C4) else Color.White // Lighter yellow for selected
+    val textColor = if (isSelected) Color.Black.copy(alpha = 0.8f) else Color.Black.copy(alpha = 0.8f)
     val borderColor = if (isSelected) Color(0xFFFFB74D) else Color.Gray.copy(alpha = 0.3f)
 
     Surface(
@@ -476,8 +476,8 @@ fun CustomStyleCard(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val backgroundColor = if (isSelected) Color(0xFFFFB74D) else Color.White
-    val textColor = if (isSelected) Color.White else Color.Black.copy(alpha = 0.8f)
+    val backgroundColor = if (isSelected) Color(0xFFFFF3C4) else Color.White // Lighter yellow for selected
+    val textColor = if (isSelected) Color.Black.copy(alpha = 0.8f) else Color.Black.copy(alpha = 0.8f)
     val borderColor = if (isSelected) Color(0xFFFFB74D) else Color.Gray.copy(alpha = 0.3f)
 
     Surface(
@@ -623,8 +623,8 @@ fun TemplateCard(
             .fillMaxWidth()
             .clickable { onPromptChange(prompt) },
         shape = RoundedCornerShape(12.dp),
-        color = Color(0xFFFFD84E).copy(alpha = 0.3f), // Light yellow background matching app theme
-        shadowElevation = 2.dp
+        color = Color.White.copy(alpha = 0.95f), // White background like other cards
+        shadowElevation = 4.dp // Match other cards elevation
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
