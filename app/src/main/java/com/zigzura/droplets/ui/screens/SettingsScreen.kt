@@ -1,10 +1,15 @@
 package com.zigzura.droplets.ui.screens
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -346,6 +351,48 @@ fun SettingsScreen(
                     }
                 }
             }
+
+            // Spacer after last main section
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            // Privacy Policy Section
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.White.copy(alpha = 0.95f),
+                    shadowElevation = 4.dp
+                ) {
+                    UrlSettingsItem(
+                        title = "Privacy Policy",
+                        description = "Learn how we protect your data",
+                        url = "https://your-app-domain.com/privacy-policy" // Replace with your actual URL
+                    )
+                }
+            }
+
+            // Terms of Service Section
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.White.copy(alpha = 0.95f),
+                    shadowElevation = 4.dp
+                ) {
+                    UrlSettingsItem(
+                        title = "Terms of Service",
+                        description = "Read our terms and conditions",
+                        url = "https://your-app-domain.com/terms-of-service" // Replace with your actual URL
+                    )
+                }
+            }
+
+            // Bottom spacing
+            item {
+                Spacer(modifier = Modifier.height(32.dp))
+            }
         }
     }
 }
@@ -411,5 +458,54 @@ fun StatItem(
             fontSize = 12.sp,
             color = Color.Black.copy(alpha = 0.6f)
         )
+    }
+}
+
+@Composable
+fun UrlSettingsItem(
+    title: String,
+    description: String,
+    url: String
+) {
+    val context = LocalContext.current
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                // Open the URL in a browser
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                context.startActivity(intent)
+            },
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFF8FAFC)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF1E293B)
+                )
+                Text(
+                    text = description,
+                    fontSize = 12.sp,
+                    color = Color(0xFF64748B)
+                )
+            }
+            Icon(
+                Icons.Outlined.Email,
+                contentDescription = "Open in browser",
+                tint = Color(0xFF94A3B8),
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }
