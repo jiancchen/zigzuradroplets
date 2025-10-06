@@ -44,7 +44,7 @@ fun AppViewScreen(
     Scaffold(
         containerColor = Color.Transparent
     ) { paddingValues ->
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
@@ -57,164 +57,341 @@ fun AppViewScreen(
                     )
                 )
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding() // Add system status bar padding
-            ) {
-                // Custom Top Bar with design system styling
-                Card(
+            val isWideScreen = maxWidth > 800.dp
+
+            if (isWideScreen) {
+                // Wide screen layout - title bar on left, content on right
+                Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                    shape = RoundedCornerShape(20.dp)
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .padding(16.dp)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Back button and title
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            IconButton(
-                                onClick = onNavigateBack,
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back",
-                                    tint = Color(0xFF1E293B),
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Column {
-                                Text(
-                                    text = historyItem.title?.takeIf { it.isNotBlank() }
-                                        ?: "Generated App",
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF1E293B),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-                                        .format(Date(historyItem.timestamp)),
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF64748B)
-                                )
-                            }
-                        }
-
-                        // Action buttons
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            // Settings button (replaces edit)
-                            IconButton(
-                                onClick = { showSettingsDialog = true },
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.Settings,
-                                    contentDescription = "App settings",
-                                    tint = Color(0xFF6366F1),
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-
-                            // Favorite button
-                            IconButton(
-                                onClick = { onToggleFavorite(historyItem.id) },
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Icon(
-                                    if (historyItem.favorite == true)
-                                        Icons.Default.Favorite
-                                    else
-                                        Icons.Default.FavoriteBorder,
-                                    contentDescription = if (historyItem.favorite == true)
-                                        "Remove from favorites"
-                                    else
-                                        "Add to favorites",
-                                    tint = if (historyItem.favorite == true)
-                                        Color(0xFFEF4444)
-                                    else
-                                        Color(0xFF64748B),
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // App content in styled card
-                if (htmlContent.isNotEmpty()) {
+                    // Left side - Title bar (vertical layout)
                     Card(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .padding(horizontal = 16.dp)
-                            .padding(bottom = 16.dp),
+                            .weight(0.25f)
+                            .fillMaxHeight()
+                            .padding(end = 16.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
                         shape = RoundedCornerShape(20.dp)
                     ) {
-                        Box(
+                        Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(8.dp)
+                                .padding(20.dp),
+                            verticalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Weblet(
-                                htmlContent = htmlContent,
-                                appId = historyItem.id,
-                                onScreenshotCaptured = { screenshotPath ->
-                                    onUpdateScreenshot?.invoke(historyItem.id, screenshotPath)
-                                },
-                                paddingValues = PaddingValues(0.dp)
-                            )
+                            // Top section with back button and title
+                            Column {
+                                IconButton(
+                                    onClick = onNavigateBack,
+                                    modifier = Modifier.size(40.dp)
+                                ) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back",
+                                        tint = Color(0xFF1E293B),
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(20.dp))
+
+                                Text(
+                                    text = historyItem.title?.takeIf { it.isNotBlank() }
+                                        ?: "Generated App",
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF1E293B),
+                                    lineHeight = 30.sp
+                                )
+
+                                Text(
+                                    text = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                                        .format(Date(historyItem.timestamp)),
+                                    fontSize = 14.sp,
+                                    color = Color(0xFF64748B),
+                                    modifier = Modifier.padding(top = 8.dp)
+                                )
+                            }
+
+                            // Bottom section with action buttons
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                // Settings button
+                                Button(
+                                    onClick = { showSettingsDialog = true },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF6366F1),
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Settings,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("App Settings")
+                                }
+
+                                // Favorite button
+                                Button(
+                                    onClick = { onToggleFavorite(historyItem.id) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (historyItem.favorite == true)
+                                            Color(0xFFEF4444)
+                                        else
+                                            Color(0xFF64748B),
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(
+                                        if (historyItem.favorite == true)
+                                            Icons.Default.Favorite
+                                        else
+                                            Icons.Default.FavoriteBorder,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        if (historyItem.favorite == true)
+                                            "Remove Favorite"
+                                        else
+                                            "Add to Favorites"
+                                    )
+                                }
+                            }
                         }
                     }
-                } else {
-                    // Loading state with design system styling
+
+                    // Right side - App content (takes remaining space)
+                    if (htmlContent.isNotEmpty()) {
+                        Card(
+                            modifier = Modifier
+                                .weight(0.75f)
+                                .fillMaxHeight(),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                            shape = RoundedCornerShape(20.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(8.dp)
+                            ) {
+                                Weblet(
+                                    htmlContent = htmlContent,
+                                    appId = historyItem.id,
+                                    onScreenshotCaptured = { screenshotPath ->
+                                        onUpdateScreenshot?.invoke(historyItem.id, screenshotPath)
+                                    },
+                                    paddingValues = PaddingValues(0.dp)
+                                )
+                            }
+                        }
+                    } else {
+                        // Loading state for wide screen
+                        Card(
+                            modifier = Modifier
+                                .weight(0.75f)
+                                .fillMaxHeight(),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                            shape = RoundedCornerShape(20.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    CircularProgressIndicator(
+                                        color = Color(0xFF6366F1),
+                                        strokeWidth = 3.dp
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = "Loading app...",
+                                        color = Color(0xFF64748B),
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Original narrow screen layout
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                ) {
+                    // Custom Top Bar with design system styling
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(1f)
-                            .padding(horizontal = 16.dp)
-                            .padding(bottom = 16.dp),
+                            .padding(16.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
                         shape = RoundedCornerShape(20.dp)
                     ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
+                            // Back button and title
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
                             ) {
-                                CircularProgressIndicator(
-                                    color = Color(0xFF6366F1),
-                                    strokeWidth = 3.dp
+                                IconButton(
+                                    onClick = onNavigateBack,
+                                    modifier = Modifier.size(40.dp)
+                                ) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back",
+                                        tint = Color(0xFF1E293B),
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Column {
+                                    Text(
+                                        text = historyItem.title?.takeIf { it.isNotBlank() }
+                                            ?: "Generated App",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF1E293B),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        text = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                                            .format(Date(historyItem.timestamp)),
+                                        fontSize = 12.sp,
+                                        color = Color(0xFF64748B)
+                                    )
+                                }
+                            }
+
+                            // Action buttons
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                // Settings button (replaces edit)
+                                IconButton(
+                                    onClick = { showSettingsDialog = true },
+                                    modifier = Modifier.size(40.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Settings,
+                                        contentDescription = "App settings",
+                                        tint = Color(0xFF6366F1),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+
+                                // Favorite button
+                                IconButton(
+                                    onClick = { onToggleFavorite(historyItem.id) },
+                                    modifier = Modifier.size(40.dp)
+                                ) {
+                                    Icon(
+                                        if (historyItem.favorite == true)
+                                            Icons.Default.Favorite
+                                        else
+                                            Icons.Default.FavoriteBorder,
+                                        contentDescription = if (historyItem.favorite == true)
+                                            "Remove from favorites"
+                                        else
+                                            "Add to favorites",
+                                        tint = if (historyItem.favorite == true)
+                                            Color(0xFFEF4444)
+                                        else
+                                            Color(0xFF64748B),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // App content in styled card
+                    if (htmlContent.isNotEmpty()) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                            shape = RoundedCornerShape(20.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(8.dp)
+                            ) {
+                                Weblet(
+                                    htmlContent = htmlContent,
+                                    appId = historyItem.id,
+                                    onScreenshotCaptured = { screenshotPath ->
+                                        onUpdateScreenshot?.invoke(historyItem.id, screenshotPath)
+                                    },
+                                    paddingValues = PaddingValues(0.dp)
                                 )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "Loading app...",
-                                    color = Color(0xFF64748B),
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
+                            }
+                        }
+                    } else {
+                        // Loading state with design system styling
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                            shape = RoundedCornerShape(20.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    CircularProgressIndicator(
+                                        color = Color(0xFF6366F1),
+                                        strokeWidth = 3.dp
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = "Loading app...",
+                                        color = Color(0xFF64748B),
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
                             }
                         }
                     }

@@ -53,7 +53,13 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
-    suspend fun savePrompt(uuid: String, prompt: String, html: String, title: String = "", model: String = ClaudeModel.getDefaultModel()): PromptHistory {
+    suspend fun savePrompt(
+        uuid: String,
+        prompt: String,
+        html: String,
+        title: String = "",
+        model: String = ClaudeModel.getDefaultModel()
+    ): PromptHistory {
         val newPrompt = PromptHistory(
             id = uuid, // Use the pre-generated UUID instead of timestamp
             prompt = prompt,
@@ -67,7 +73,8 @@ class PreferencesManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             val currentJson = preferences[PROMPT_HISTORY] ?: "[]"
             val type = object : TypeToken<List<PromptHistory>>() {}.type
-            val currentList: MutableList<PromptHistory> = gson.fromJson(currentJson, type) ?: mutableListOf()
+            val currentList: MutableList<PromptHistory> =
+                gson.fromJson(currentJson, type) ?: mutableListOf()
 
             currentList.add(0, newPrompt) // Add to beginning
 
@@ -86,7 +93,8 @@ class PreferencesManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             val currentJson = preferences[PROMPT_HISTORY] ?: "[]"
             val type = object : TypeToken<List<PromptHistory>>() {}.type
-            val currentList: MutableList<PromptHistory> = gson.fromJson(currentJson, type) ?: mutableListOf()
+            val currentList: MutableList<PromptHistory> =
+                gson.fromJson(currentJson, type) ?: mutableListOf()
 
             val index = currentList.indexOfFirst { it.id == id }
             if (index != -1) {
@@ -101,7 +109,8 @@ class PreferencesManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             val currentJson = preferences[PROMPT_HISTORY] ?: "[]"
             val type = object : TypeToken<List<PromptHistory>>() {}.type
-            val currentList: MutableList<PromptHistory> = gson.fromJson(currentJson, type) ?: mutableListOf()
+            val currentList: MutableList<PromptHistory> =
+                gson.fromJson(currentJson, type) ?: mutableListOf()
 
             val index = currentList.indexOfFirst { it.id == id }
             if (index != -1) {
@@ -116,7 +125,8 @@ class PreferencesManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             val currentJson = preferences[PROMPT_HISTORY] ?: "[]"
             val type = object : TypeToken<List<PromptHistory>>() {}.type
-            val currentList: MutableList<PromptHistory> = gson.fromJson(currentJson, type) ?: mutableListOf()
+            val currentList: MutableList<PromptHistory> =
+                gson.fromJson(currentJson, type) ?: mutableListOf()
 
             val index = currentList.indexOfFirst { it.id == id }
             if (index != -1) {
@@ -131,7 +141,8 @@ class PreferencesManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             val currentJson = preferences[PROMPT_HISTORY] ?: "[]"
             val type = object : TypeToken<List<PromptHistory>>() {}.type
-            val currentList: MutableList<PromptHistory> = gson.fromJson(currentJson, type) ?: mutableListOf()
+            val currentList: MutableList<PromptHistory> =
+                gson.fromJson(currentJson, type) ?: mutableListOf()
 
             // Remove the item with matching id
             currentList.removeAll { it.id == id }
@@ -163,12 +174,18 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
-    suspend fun updatePromptHistoryContent(id: String, html: String, title: String = "", model: String = ""): PromptHistory? {
+    suspend fun updatePromptHistoryContent(
+        id: String,
+        html: String,
+        title: String = "",
+        model: String = ""
+    ): PromptHistory? {
         var updatedItem: PromptHistory? = null
         context.dataStore.edit { preferences ->
             val currentJson = preferences[PROMPT_HISTORY] ?: "[]"
             val type = object : TypeToken<List<PromptHistory>>() {}.type
-            val currentList: MutableList<PromptHistory> = gson.fromJson(currentJson, type) ?: mutableListOf()
+            val currentList: MutableList<PromptHistory> =
+                gson.fromJson(currentJson, type) ?: mutableListOf()
 
             val index = currentList.indexOfFirst { it.id == id }
             if (index != -1) {
@@ -190,7 +207,8 @@ class PreferencesManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             val currentJson = preferences[PROMPT_HISTORY] ?: "[]"
             val type = object : TypeToken<List<PromptHistory>>() {}.type
-            val currentList: MutableList<PromptHistory> = gson.fromJson(currentJson, type) ?: mutableListOf()
+            val currentList: MutableList<PromptHistory> =
+                gson.fromJson(currentJson, type) ?: mutableListOf()
 
             val index = currentList.indexOfFirst { it.id == id }
             if (index != -1) {
