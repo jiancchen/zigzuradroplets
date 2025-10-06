@@ -6,6 +6,8 @@ sealed class Screen(val route: String) {
     object Splash : Screen("splash")
     object Signup : Screen("signup")
     object Debug : Screen("debug")
+    object Create : Screen("create")
+    object Settings : Screen("settings")
     object Stacks : Screen("stacks")
     object AppView : Screen("app_view/{appId}") {
         fun createRoute(appId: String) = "app_view/$appId"
