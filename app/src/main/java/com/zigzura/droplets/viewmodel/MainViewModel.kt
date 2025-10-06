@@ -65,6 +65,38 @@ class MainViewModel @Inject constructor(
                     if (errorMessage.startsWith("PROMPT_REJECTED:")) {
                         val rejectionReason = errorMessage.substringAfter("PROMPT_REJECTED:")
                         _promptRejection.value = rejectionReason
+                    } else if (errorMessage.startsWith("API Error:")) {
+                        // Convert different API errors to user-friendly messages
+                        val userFriendlyMessage = when {
+                            errorMessage.contains("529") || errorMessage.contains("overloaded_error") ||
+                            errorMessage.contains("Overloaded") -> "Claude is temporarily overloaded. Please try again in a moment."
+
+                            errorMessage.contains("401") || errorMessage.contains("authentication_error") ||
+                            errorMessage.contains("invalid_request_error") -> "Authentication failed. Please check your API key in settings."
+
+                            errorMessage.contains("403") || errorMessage.contains("permission_error") ->
+                            "Access denied. Please check your API key permissions."
+
+                            errorMessage.contains("429") || errorMessage.contains("rate_limit_error") ->
+                            "Rate limit exceeded. Please wait a moment before trying again."
+
+                            errorMessage.contains("500") || errorMessage.contains("502") || errorMessage.contains("503") ||
+                            errorMessage.contains("server_error") -> "Server error. Please try again later."
+
+                            errorMessage.contains("400") || errorMessage.contains("invalid_request_error") ->
+                            "Invalid request. Please try rephrasing your prompt."
+
+                            errorMessage.contains("413") || errorMessage.contains("request_too_large") ->
+                            "Your prompt is too long. Please try a shorter prompt."
+
+                            errorMessage.contains("422") -> "Request format error. Please try again."
+
+                            errorMessage.contains("timeout") || errorMessage.contains("network") ->
+                            "Network timeout. Please check your connection and try again."
+
+                            else -> "Server issue, please try again later"
+                        }
+                        _error.value = userFriendlyMessage
                     } else {
                         _error.value = errorMessage
                     }

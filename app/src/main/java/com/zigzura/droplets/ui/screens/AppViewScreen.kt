@@ -342,6 +342,65 @@ fun AppSettingsDialog(
                     }
                 }
 
+                // Model used section
+                Text(
+                    text = "AI Model Used",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF374151),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = historyItem.model ?: "claude-3-haiku-20240307",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF475569),
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        // Badge to indicate model type
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = when {
+                                    historyItem.model?.contains("opus") == true -> Color(0xFF7C3AED)
+                                    historyItem.model?.contains("sonnet") == true -> Color(0xFF059669)
+                                    historyItem.model?.contains("haiku") == true -> Color(0xFF2563EB)
+                                    else -> Color(0xFF6B7280)
+                                }
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = when {
+                                    historyItem.model?.contains("opus") == true -> "OPUS"
+                                    historyItem.model?.contains("sonnet") == true -> "SONNET"
+                                    historyItem.model?.contains("haiku") == true -> "HAIKU"
+                                    else -> "CLAUDE"
+                                },
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+
                 // Action buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),

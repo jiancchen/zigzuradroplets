@@ -34,16 +34,21 @@ class ClaudeRepository(private val preferencesManager: PreferencesManager) {
 
             Log.d("ClaudeRepository", "Using API key: ${apiKey.take(10)}...")
 
+            // Get user's preferred model from preferences
+            val selectedModel = preferencesManager.claudeModel.first()
+            Log.d("ClaudeRepository", "Using model: $selectedModel")
+
             // Enhance prompt with instructions for HTML output
 
             val request = ClaudeRequest(
+                model = selectedModel, // Use the user's preferred model
                 messages = listOf(
                     ClaudeMessage(
                         role = "user",
                         content = PromptGenerator.generatePrompt(prompt).trimIndent()
                     )
                 ),
-                temperature = temperature // Pass the temperature parameter
+                temperature = temperature, // Pass the temperature parameter
             )
 
             Log.d("ClaudeRepository", "Sending request to Claude API...")
