@@ -14,9 +14,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zigzura.droplets.R
 import com.zigzura.droplets.data.PromptStyles
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,13 +26,49 @@ import com.zigzura.droplets.data.PromptStyles
 fun CreateScreen(
     prompt: String,
     onPromptChange: (String) -> Unit,
-    onSubmit: (String) -> Unit, // Updated to accept style parameter
+    onSubmit: (String) -> Unit,
     onAppCreated: (String) -> Unit = {},
     isLoading: Boolean
 ) {
     var selectedStyle by remember { mutableStateOf(PromptStyles.DEFAULT) }
     var customStyle by remember { mutableStateOf("") }
     var showCustomStyleDialog by remember { mutableStateOf(false) }
+
+    // Create template suggestions using string resources
+    val templateSuggestions = remember {
+        listOf(
+            AppTemplate(
+                name = "", // Will be set in UI
+                emoji = "✅",
+                description = "", // Will be set in UI
+                prompt = "" // Will be set in UI
+            ),
+            AppTemplate(
+                name = "",
+                emoji = "🎯", 
+                description = "",
+                prompt = ""
+            ),
+            AppTemplate(
+                name = "",
+                emoji = "📝",
+                description = "",
+                prompt = ""
+            ),
+            AppTemplate(
+                name = "",
+                emoji = "🧮",
+                description = "",
+                prompt = ""
+            ),
+            AppTemplate(
+                name = "",
+                emoji = "⏰",
+                description = "",
+                prompt = ""
+            )
+        )
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -39,7 +77,7 @@ fun CreateScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Create New App",
+                        text = stringResource(R.string.create_new_app),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black.copy(alpha = 0.8f)
@@ -70,7 +108,7 @@ fun CreateScreen(
                         modifier = Modifier.padding(20.dp)
                     ) {
                         Text(
-                            text = "Pick a style",
+                            text = stringResource(R.string.pick_a_style),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black.copy(alpha = 0.8f),
@@ -118,7 +156,7 @@ fun CreateScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Describe your app",
+                                text = stringResource(R.string.describe_your_app),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black.copy(alpha = 0.8f)
@@ -132,7 +170,7 @@ fun CreateScreen(
                                 ) {
                                     Icon(
                                         Icons.Default.Clear,
-                                        contentDescription = "Clear text",
+                                        contentDescription = stringResource(R.string.clear_text),
                                         tint = Color.Gray,
                                         modifier = Modifier.size(20.dp)
                                     )
@@ -147,7 +185,7 @@ fun CreateScreen(
                             onValueChange = onPromptChange,
                             placeholder = {
                                 Text(
-                                    "I want an app that tracks my daily habits...",
+                                    stringResource(R.string.app_description_placeholder),
                                     color = Color.Gray
                                 )
                             },
@@ -190,7 +228,7 @@ fun CreateScreen(
                                     strokeWidth = 2.dp
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Generating...")
+                                Text(stringResource(R.string.generating))
                             } else {
                                 Icon(
                                     Icons.AutoMirrored.Filled.Send,
@@ -199,7 +237,7 @@ fun CreateScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    "Generate App",
+                                    stringResource(R.string.generate_app),
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -213,7 +251,7 @@ fun CreateScreen(
             if (!isLoading) {
                 item {
                     Text(
-                        text = "Quick Templates",
+                        text = stringResource(R.string.quick_templates),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black.copy(alpha = 0.8f),
@@ -221,39 +259,55 @@ fun CreateScreen(
                     )
                 }
 
-                items(templateSuggestions) { template ->
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onPromptChange(template.prompt) },
-                        shape = RoundedCornerShape(12.dp),
-                        color = Color.White.copy(alpha = 0.8f),
-                        shadowElevation = 2.dp
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = template.emoji,
-                                fontSize = 24.sp,
-                                modifier = Modifier.padding(end = 12.dp)
-                            )
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = template.name,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Black.copy(alpha = 0.8f)
-                                )
-                                Text(
-                                    text = template.description,
-                                    fontSize = 12.sp,
-                                    color = Color.Black.copy(alpha = 0.6f)
-                                )
-                            }
-                        }
-                    }
+                // Use separate items for each template with string resources
+                item {
+                    TemplateCard(
+                        emoji = "✅",
+                        name = stringResource(R.string.template_todo_name),
+                        description = stringResource(R.string.template_todo_description),
+                        prompt = stringResource(R.string.template_todo_prompt),
+                        onPromptChange = onPromptChange
+                    )
+                }
+                
+                item {
+                    TemplateCard(
+                        emoji = "🎯",
+                        name = stringResource(R.string.template_habit_name),
+                        description = stringResource(R.string.template_habit_description),
+                        prompt = stringResource(R.string.template_habit_prompt),
+                        onPromptChange = onPromptChange
+                    )
+                }
+                
+                item {
+                    TemplateCard(
+                        emoji = "📝",
+                        name = stringResource(R.string.template_notes_name),
+                        description = stringResource(R.string.template_notes_description),
+                        prompt = stringResource(R.string.template_notes_prompt),
+                        onPromptChange = onPromptChange
+                    )
+                }
+                
+                item {
+                    TemplateCard(
+                        emoji = "🧮",
+                        name = stringResource(R.string.template_calculator_name),
+                        description = stringResource(R.string.template_calculator_description),
+                        prompt = stringResource(R.string.template_calculator_prompt),
+                        onPromptChange = onPromptChange
+                    )
+                }
+                
+                item {
+                    TemplateCard(
+                        emoji = "⏰",
+                        name = stringResource(R.string.template_timer_name),
+                        description = stringResource(R.string.template_timer_description),
+                        prompt = stringResource(R.string.template_timer_prompt),
+                        onPromptChange = onPromptChange
+                    )
                 }
             }
         }
@@ -395,7 +449,7 @@ fun CustomStyleCard(
                 modifier = Modifier.padding(bottom = 4.dp)
             )
             Text(
-                text = "Custom",
+                text = stringResource(R.string.style_custom),
                 fontSize = 12.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                 color = textColor,
@@ -426,7 +480,7 @@ fun CustomStyleDialog(
                 modifier = Modifier.padding(24.dp)
             ) {
                 Text(
-                    text = "Custom Style",
+                    text = stringResource(R.string.custom_style),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black.copy(alpha = 0.8f),
@@ -434,7 +488,7 @@ fun CustomStyleDialog(
                 )
 
                 Text(
-                    text = "Describe the style you want for your app:",
+                    text = stringResource(R.string.custom_style_description),
                     fontSize = 14.sp,
                     color = Color.Black.copy(alpha = 0.6f),
                     modifier = Modifier.padding(bottom = 12.dp)
@@ -444,7 +498,7 @@ fun CustomStyleDialog(
                     value = styleText,
                     onValueChange = { styleText = it },
                     placeholder = {
-                        Text("e.g., Modern and minimalist, Dark theme, Colorful and playful...")
+                        Text(stringResource(R.string.custom_style_placeholder))
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -468,7 +522,7 @@ fun CustomStyleDialog(
                             contentColor = Color.Gray
                         )
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -482,7 +536,7 @@ fun CustomStyleDialog(
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Save Style")
+                        Text(stringResource(R.string.save_style))
                     }
                 }
             }
@@ -496,5 +550,47 @@ fun getStyleEmoji(style: String): String {
         PromptStyles.FUN -> "🎯"
         PromptStyles.SIMPLE -> "✨"
         else -> "🎨"
+    }
+}
+
+@Composable
+fun TemplateCard(
+    emoji: String,
+    name: String,
+    description: String,
+    prompt: String,
+    onPromptChange: (String) -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onPromptChange(prompt) },
+        shape = RoundedCornerShape(12.dp),
+        color = Color.White.copy(alpha = 0.8f),
+        shadowElevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = emoji,
+                fontSize = 24.sp,
+                modifier = Modifier.padding(end = 12.dp)
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = name,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black.copy(alpha = 0.8f)
+                )
+                Text(
+                    text = description,
+                    fontSize = 12.sp,
+                    color = Color.Black.copy(alpha = 0.6f)
+                )
+            }
+        }
     }
 }

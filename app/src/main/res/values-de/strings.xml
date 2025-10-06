@@ -1,0 +1,94 @@
+<resources>
+    <string name="app_name">Droplets</string>
+
+    <!-- Navigation and General -->
+    <string name="my_apps">Meine Apps</string>
+    <string name="create">Erstellen</string>
+    <string name="settings">Einstellungen</string>
+    <string name="search_your_apps">Durchsuche deine Apps…</string>
+    <string name="show_favorites">Favoriten anzeigen</string>
+    <string name="clear_search">Suche löschen</string>
+
+    <!-- CreateScreen -->
+    <string name="create_new_app">Neue App Erstellen</string>
+    <string name="pick_a_style">Wähle einen Stil</string>
+    <string name="describe_your_app">Beschreibe deine App</string>
+    <string name="clear_text">Text löschen</string>
+    <string name="app_description_placeholder">Ich möchte eine App, die meine täglichen Gewohnheiten verfolgt…</string>
+    <string name="generate_app">App Generieren</string>
+    <string name="generating">Generiere…</string>
+    <string name="quick_templates">Schnelle Vorlagen</string>
+    <string name="custom_style">Benutzerdefinierter Stil</string>
+    <string name="custom_style_description">Beschreibe den Stil, den du für deine App möchtest:</string>
+    <string name="custom_style_placeholder">z.B., Modern und minimalistisch, Dunkles Theme, Bunt und verspielt…</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="save_style">Stil Speichern</string>
+
+    <!-- Style Options -->
+    <string name="style_default">Standard</string>
+    <string name="style_fun">Spaßig</string>
+    <string name="style_simple">Einfach</string>
+    <string name="style_custom">Benutzerdefiniert</string>
+
+    <!-- Template Suggestions -->
+    <string name="template_todo_name">To-Do-Liste</string>
+    <string name="template_todo_description">Einfache Aufgabenverwaltung</string>
+    <string name="template_todo_prompt">Erstelle eine To-Do-Listen-App mit Hinzufügen-, Löschen- und Als-erledigt-markieren-Funktionen</string>
+
+    <string name="template_habit_name">Gewohnheits-Tracker</string>
+    <string name="template_habit_description">Tägliche Gewohnheiten verfolgen</string>
+    <string name="template_habit_prompt">Erstelle einen Gewohnheits-Tracker, mit dem ich tägliche Gewohnheiten abhaken und Serien anzeigen kann</string>
+
+    <string name="template_notes_name">Notizen</string>
+    <string name="template_notes_description">Schnelle Notizen und Memos</string>
+    <string name="template_notes_prompt">Erstelle eine einfache Notizen-App, wo ich Notizen hinzufügen, bearbeiten und löschen kann</string>
+
+    <string name="template_calculator_name">Taschenrechner</string>
+    <string name="template_calculator_description">Basis-Taschenrechner</string>
+    <string name="template_calculator_prompt">Erstelle eine Taschenrechner-App mit grundlegenden arithmetischen Operationen</string>
+
+    <string name="template_timer_name">Timer</string>
+    <string name="template_timer_description">Countdown-Timer</string>
+    <string name="template_timer_prompt">Erstelle eine Countdown-Timer-App mit Start-, Pause- und Reset-Funktionen</string>
+
+    <!-- StacksScreen -->
+    <string name="favorite_apps">Lieblings-Apps</string>
+    <string name="most_used_apps">Meist Verwendete Apps</string>
+    <string name="no_favorite_apps_yet">Noch keine Lieblings-Apps</string>
+    <string name="no_usage_data_yet">Noch keine Nutzungsdaten</string>
+    <string name="open_menu">Menü öffnen</string>
+    <string name="close_menu">Menü schließen</string>
+
+    <!-- AppViewScreen -->
+    <string name="app_screenshot">App-Screenshot</string>
+    <string name="edit_title">Titel bearbeiten</string>
+    <string name="copy_prompt">Prompt kopieren</string>
+    <string name="original_prompt">Original-Prompt</string>
+
+    <!-- Common Actions -->
+    <string name="save">Speichern</string>
+    <string name="edit">Bearbeiten</string>
+    <string name="delete">Löschen</string>
+    <string name="copy">Kopieren</string>
+    <string name="share">Teilen</string>
+    <string name="close">Schließen</string>
+    <string name="back">Zurück</string>
+    <string name="next">Weiter</string>
+    <string name="done">Fertig</string>
+    <string name="ok">OK</string>
+
+    <!-- Error Messages -->
+    <string name="error_loading">Fehler beim Laden</string>
+    <string name="error_network">Netzwerkfehler</string>
+    <string name="error_try_again">Bitte versuche es erneut</string>
+
+    <!-- Language & Region Settings -->
+    <string name="language_region_settings">Sprache &amp; Region</string>
+    <string name="app_language">App-Sprache</string>
+    <string name="language_override_note">Dies überschreibt die Systemspracheinstellung</string>
+
+    <!-- Status Messages -->
+    <string name="loading">Lade…</string>
+    <string name="saved">Gespeichert</string>
+    <string name="copied">Kopiert</string>
+</resources>

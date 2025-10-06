@@ -11,9 +11,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zigzura.droplets.R
+import com.zigzura.droplets.constants.ClaudeModel
+import com.zigzura.droplets.data.LanguageManager
 import com.zigzura.droplets.data.PromptHistory
 import com.zigzura.droplets.data.PreferencesManager
 import kotlinx.coroutines.launch
@@ -32,7 +36,7 @@ fun SettingsScreen(
 
     // Load preferences
     val savedTemperature by preferencesManager.temperature.collectAsState(initial = 0.3f)
-    val savedModel by preferencesManager.claudeModel.collectAsState(initial = "claude-3-5-sonnet-20241022")
+    val savedModel by preferencesManager.claudeModel.collectAsState(initial = ClaudeModel.getDefaultModel())
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -128,21 +132,6 @@ fun SettingsScreen(
                         )
 
                         var expanded by remember { mutableStateOf(false) }
-                        val models = listOf(
-                            "claude-sonnet-4-5-20250929",
-                            "claude-sonnet-4-20250514",
-                            "claude-3-7-sonnet-latest",
-                            "claude-3-5-haiku-latest",
-                            "claude-3-haiku-20240307"
-                        )
-
-                        val modelCosts = mapOf(
-                            "claude-sonnet-4-5-20250929" to "~\$3 / 1M input + \$15 / 1M output",
-                            "claude-sonnet-4-20250514" to "~\$3 / 1M input + \$15 / 1M output",
-                            "claude-3-7-sonnet-latest" to "~\$3 / 1M input + \$15 / 1M output",
-                            "claude-3-5-haiku-latest" to "~\$0.80 / 1M input + ~\$4.00 / 1M output",
-                            "claude-3-haiku-20240307" to "~\$0.25 / 1M input + \$1.25 / 1M output"
-                        )
 
                         ExposedDropdownMenuBox(
                             expanded = expanded,
@@ -169,7 +158,7 @@ fun SettingsScreen(
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false }
                             ) {
-                                models.forEach { model ->
+                                ClaudeModel.models.forEach { model ->
                                     DropdownMenuItem(
                                         text = { Text(model) },
                                         onClick = {
@@ -185,7 +174,7 @@ fun SettingsScreen(
 
 // After the ExposedDropdownMenuBox in your model selection section:
                         Text(
-                            text = modelCosts[savedModel] ?: "",
+                            text = ClaudeModel.modelCosts[savedModel] ?: "",
                             fontSize = 12.sp,
                             color = Color(0xFF64748B),
                             modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
@@ -223,6 +212,101 @@ fun SettingsScreen(
                             fontSize = 12.sp,
                             color = Color.Black.copy(alpha = 0.6f)
                         )
+                    }
+                }
+            }
+
+            // Language & Region Section
+            item {
+                val languageManager = remember { LanguageManager(context) }
+                val selectedLanguage by languageManager.selectedLanguage.collectAsState(initial = LanguageManager.SYSTEM_DEFAULT)
+
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.White.copy(alpha = 0.95f),
+                    shadowElevation = 4.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.language_region_settings),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black.copy(alpha = 0.8f),
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        // Language Selection
+                        Text(
+                            text = stringResource(R.string.app_language),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black.copy(alpha = 0.8f),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+
+                        var languageExpanded by remember { mutableStateOf(false) }
+
+                        ExposedDropdownMenuBox(
+                            expanded = languageExpanded,
+                            onExpandedChange = { languageExpanded = !languageExpanded }
+                        ) {
+                            OutlinedTextField(
+                                value = languageManager.getLanguageDisplayName(selectedLanguage),
+                                onValueChange = { },
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = languageExpanded) },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFFFFB74D),
+                                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                                    focusedTextColor = Color.Black.copy(alpha = 0.8f),
+                                    unfocusedTextColor = Color.Black.copy(alpha = 0.8f)
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = languageExpanded,
+                                onDismissRequest = { languageExpanded = false }
+                            ) {
+                                languageManager.availableLanguages.forEach { language ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Column {
+                                                Text(language.displayName)
+                                                if (language.code != LanguageManager.SYSTEM_DEFAULT) {
+                                                    Text(
+                                                        text = language.nativeName,
+                                                        fontSize = 12.sp,
+                                                        color = Color.Gray
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        onClick = {
+                                            scope.launch {
+                                                languageManager.setLanguage(language.code)
+                                            }
+                                            languageExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        if (selectedLanguage != LanguageManager.SYSTEM_DEFAULT) {
+                            Text(
+                                text = stringResource(R.string.language_override_note),
+                                fontSize = 12.sp,
+                                color = Color(0xFF64748B),
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
                     }
                 }
             }

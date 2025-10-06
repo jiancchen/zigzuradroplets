@@ -1,0 +1,94 @@
+<resources>
+    <string name="app_name">Droplets</string>
+
+    <!-- Navigation and General -->
+    <string name="my_apps">Mes Apps</string>
+    <string name="create">Créer</string>
+    <string name="settings">Paramètres</string>
+    <string name="search_your_apps">Recherchez vos apps…</string>
+    <string name="show_favorites">Afficher les favoris</string>
+    <string name="clear_search">Effacer la recherche</string>
+
+    <!-- CreateScreen -->
+    <string name="create_new_app">Créer une Nouvelle App</string>
+    <string name="pick_a_style">Choisir un style</string>
+    <string name="describe_your_app">Décrivez votre app</string>
+    <string name="clear_text">Effacer le texte</string>
+    <string name="app_description_placeholder">Je veux une app qui suit mes habitudes quotidiennes…</string>
+    <string name="generate_app">Générer l\'App</string>
+    <string name="generating">Génération…</string>
+    <string name="quick_templates">Modèles Rapides</string>
+    <string name="custom_style">Style Personnalisé</string>
+    <string name="custom_style_description">Décrivez le style que vous voulez pour votre app :</string>
+    <string name="custom_style_placeholder">ex., Moderne et minimaliste, Thème sombre, Coloré et ludique…</string>
+    <string name="cancel">Annuler</string>
+    <string name="save_style">Enregistrer le Style</string>
+
+    <!-- Style Options -->
+    <string name="style_default">Par défaut</string>
+    <string name="style_fun">Amusant</string>
+    <string name="style_simple">Simple</string>
+    <string name="style_custom">Personnalisé</string>
+
+    <!-- Template Suggestions -->
+    <string name="template_todo_name">Liste de Tâches</string>
+    <string name="template_todo_description">Gestion simple des tâches</string>
+    <string name="template_todo_prompt">Créer une app de liste de tâches avec des fonctions d\'ajout, suppression et marquage comme terminé</string>
+
+    <string name="template_habit_name">Suivi d\'Habitudes</string>
+    <string name="template_habit_description">Suivre les habitudes quotidiennes</string>
+    <string name="template_habit_prompt">Créer un suivi d\'habitudes qui me permet de cocher les habitudes quotidiennes et d\'afficher les séries</string>
+
+    <string name="template_notes_name">Prise de Notes</string>
+    <string name="template_notes_description">Notes rapides et mémos</string>
+    <string name="template_notes_prompt">Créer une app simple de prise de notes où je peux ajouter, modifier et supprimer des notes</string>
+
+    <string name="template_calculator_name">Calculatrice</string>
+    <string name="template_calculator_description">Calculatrice de base</string>
+    <string name="template_calculator_prompt">Créer une app calculatrice avec des opérations arithmétiques de base</string>
+
+    <string name="template_timer_name">Minuteur</string>
+    <string name="template_timer_description">Minuteur de compte à rebours</string>
+    <string name="template_timer_prompt">Créer une app de minuteur de compte à rebours avec des fonctions de démarrage, pause et remise à zéro</string>
+
+    <!-- StacksScreen -->
+    <string name="favorite_apps">Apps Favorites</string>
+    <string name="most_used_apps">Apps les Plus Utilisées</string>
+    <string name="no_favorite_apps_yet">Pas encore d\'apps favorites</string>
+    <string name="no_usage_data_yet">Pas encore de données d\'utilisation</string>
+    <string name="open_menu">Ouvrir le menu</string>
+    <string name="close_menu">Fermer le menu</string>
+
+    <!-- AppViewScreen -->
+    <string name="app_screenshot">Capture d\'écran de l\'app</string>
+    <string name="edit_title">Modifier le titre</string>
+    <string name="copy_prompt">Copier le prompt</string>
+    <string name="original_prompt">Prompt Original</string>
+
+    <!-- Common Actions -->
+    <string name="save">Enregistrer</string>
+    <string name="edit">Modifier</string>
+    <string name="delete">Supprimer</string>
+    <string name="copy">Copier</string>
+    <string name="share">Partager</string>
+    <string name="close">Fermer</string>
+    <string name="back">Retour</string>
+    <string name="next">Suivant</string>
+    <string name="done">Terminé</string>
+    <string name="ok">OK</string>
+
+    <!-- Error Messages -->
+    <string name="error_loading">Erreur de chargement</string>
+    <string name="error_network">Erreur réseau</string>
+    <string name="error_try_again">Veuillez réessayer</string>
+
+    <!-- Language & Region Settings -->
+    <string name="language_region_settings">Langue et Région</string>
+    <string name="app_language">Langue de l\'App</string>
+    <string name="language_override_note">Ceci remplace les paramètres de langue de votre système</string>
+
+    <!-- Status Messages -->
+    <string name="loading">Chargement…</string>
+    <string name="saved">Enregistré</string>
+    <string name="copied">Copié</string>
+</resources>

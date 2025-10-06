@@ -47,10 +47,12 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.zigzura.droplets.R
 import com.zigzura.droplets.data.PromptHistory
 import com.zigzura.droplets.ui.components.SearchBarWithFavorites
 import com.zigzura.droplets.ui.components.ThreeDImageCard
@@ -378,7 +380,7 @@ fun StacksFloatingToolbar(
             ) {
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.Close else Icons.Default.Menu,
-                    contentDescription = if (isExpanded) "Close menu" else "Open menu",
+                    contentDescription = if (isExpanded) stringResource(R.string.close_menu) else stringResource(R.string.open_menu),
                     modifier = Modifier.size(24.dp)
                 )
             }

@@ -1,5 +1,6 @@
 package com.zigzura.droplets
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -22,6 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.zigzura.droplets.data.LanguageManager
 import com.zigzura.droplets.navigation.Screen
 import com.zigzura.droplets.ui.screens.AppViewScreen
 import com.zigzura.droplets.ui.screens.DebugScreen
@@ -36,13 +38,57 @@ import com.zigzura.droplets.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import com.zigzura.droplets.ui.screens.CreateScreen
 import com.zigzura.droplets.ui.screens.SettingsScreen
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import java.util.Locale
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private lateinit var languageManager: LanguageManager
+    private var lastAppliedLanguage: String = LanguageManager.SYSTEM_DEFAULT
+
+    override fun attachBaseContext(newBase: Context?) {
+        if (newBase == null) {
+            super.attachBaseContext(newBase)
+            return
+        }
+
+        // Initialize language manager and apply language configuration
+        languageManager = LanguageManager(newBase)
+
+        // Get the selected language synchronously (we need to block here for attachBaseContext)
+        val selectedLanguage = runBlocking {
+            languageManager.selectedLanguage.first()
+        }
+
+        // Apply language context
+        val localizedContext = languageManager.applyLanguage(newBase, selectedLanguage)
+        lastAppliedLanguage = selectedLanguage
+
+        super.attachBaseContext(localizedContext)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+
+        // Initialize language manager if not already done
+        if (!::languageManager.isInitialized) {
+            languageManager = LanguageManager(this)
+        }
+
         setContent {
+            // Monitor language changes and recreate activity when needed
+            val selectedLanguage by languageManager.selectedLanguage.collectAsState(initial = lastAppliedLanguage)
+
+            // Only recreate if language actually changed to avoid infinite loops
+            LaunchedEffect(selectedLanguage) {
+                if (selectedLanguage != lastAppliedLanguage && selectedLanguage != LanguageManager.SYSTEM_DEFAULT) {
+                    recreate()
+                }
+            }
+
             DropletsTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),

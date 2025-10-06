@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.zigzura.droplets.constants.ClaudeModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -43,7 +44,7 @@ class PreferencesManager(private val context: Context) {
 
     val claudeModel: Flow<String> = context.dataStore.data
         .map { preferences ->
-            preferences[CLAUDE_MODEL] ?: "claude-3-haiku-20240307" // Default to cheapest
+            preferences[CLAUDE_MODEL] ?: ClaudeModel.getDefaultModel() // Default to cheapest
         }
 
     suspend fun saveApiKey(apiKey: String) {
@@ -52,7 +53,7 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
-    suspend fun savePrompt(uuid: String, prompt: String, html: String, title: String = "", model: String = "claude-3-haiku-20240307"): PromptHistory {
+    suspend fun savePrompt(uuid: String, prompt: String, html: String, title: String = "", model: String = ClaudeModel.getDefaultModel()): PromptHistory {
         val newPrompt = PromptHistory(
             id = uuid, // Use the pre-generated UUID instead of timestamp
             prompt = prompt,
