@@ -112,20 +112,32 @@ fun Scrollable3DStack(
         contentPadding = PaddingValues(vertical = 100.dp)
     ) {
         itemsIndexed(items) { index, item ->
-            val firstVisible = listState.firstVisibleItemIndex
-            val visibleOffset = listState.firstVisibleItemScrollOffset / 1000f
+            // Calculate the item's position relative to the LazyColumn viewport
+            val layoutInfo = listState.layoutInfo
+            val visibleItem = layoutInfo.visibleItemsInfo.find { it.index == index }
 
-            // compute a relative depth (0 = top, 1+ = below)
-            val depth = (index - firstVisible) + visibleOffset
-            val clamped = depth.coerceIn(0f, 4f)  // only animate first few visible
+            val itemCenterY = visibleItem?.let { itemInfo ->
+                val itemTop = itemInfo.offset
+                val itemHeight = itemInfo.size
+                itemTop + itemHeight / 2f
+            } ?: 0f
 
-            // Smooth scaling that grows gradually as cards approach the top
-            val smoothScale = 0.7f + (0.3f * (1f - (clamped / 4f).coerceIn(0f, 1f)))
+            // Screen center relative to LazyColumn viewport
+            val screenCenterY = layoutInfo.viewportSize.height / 2f
 
-            val rotationX = 8f + (clamped * 6f)
+            // Distance from item center to screen center (normalized)
+            val distanceFromCenter = kotlin.math.abs(itemCenterY - screenCenterY) / screenCenterY
+            val normalizedDistance = distanceFromCenter.coerceIn(0f, 2f)
+
+            // Smooth scaling based on distance from center (closer = larger)
+            val smoothScale = 1f - (normalizedDistance * 0.3f).coerceIn(0f, 0.3f)
+
+            // 3D effects based on position
+            val depth = normalizedDistance.coerceIn(0f, 4f)
+            val rotationX = 8f + (depth * 6f)
             val rotationY = -10f
-            val translationY = clamped * 40f
-            val alpha = (1f - (clamped * 0.2f)).coerceIn(0.2f, 1f)
+            val translationY = depth * 40f
+            val alpha = (1f - (depth * 0.2f)).coerceIn(0.2f, 1f)
 
             Box(
                 modifier = Modifier
