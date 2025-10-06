@@ -1,67 +1,61 @@
 package com.zigzura.droplets.ui.screens
 
-import android.graphics.BitmapFactory
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.zigzura.droplets.data.PromptHistory
-import com.zigzura.droplets.utils.ScreenshotUtils
+import com.zigzura.droplets.ui.components.SearchBarWithFavorites
+import com.zigzura.droplets.ui.components.ThreeDImageCard
 import com.zigzura.droplets.utils.rememberScrollStateWithPreservation
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
-import java.util.concurrent.ConcurrentHashMap
 
 @Composable
 fun StacksScreen(
@@ -72,9 +66,7 @@ fun StacksScreen(
     onNavigateToSettings: () -> Unit = {}
 ) {
     // Use actual prompt history or sample data if empty
-    val historyItems = if (promptHistory.isNotEmpty()) {
-        promptHistory
-    } else {
+    val historyItems = promptHistory.ifEmpty {
         listOf(
             PromptHistory(
                 id = "sample1",
@@ -112,9 +104,10 @@ fun StacksScreen(
             isSearchActive && searchText.text.isNotBlank() -> {
                 historyItems.filter { item ->
                     item.title?.contains(searchText.text, ignoreCase = true) == true ||
-                    item.prompt.contains(searchText.text, ignoreCase = true)
+                            item.prompt.contains(searchText.text, ignoreCase = true)
                 }
             }
+
             else -> historyItems // Always show all items when not searching
         }
     }
@@ -176,34 +169,6 @@ fun StacksScreen(
 }
 
 @Composable
-fun ThreeDCard(
-    title: String,
-    rotationX: Float,
-    rotationY: Float,
-    backgroundColor: Color = Color.Black,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .graphicsLayer {
-                this.rotationX = rotationX
-                this.rotationY = rotationY
-                cameraDistance = 12 * density
-            }
-            .background(backgroundColor, RoundedCornerShape(16.dp))
-            .border(1.dp, Color.DarkGray, RoundedCornerShape(16.dp))
-            .padding(24.dp)
-    ) {
-        Text(
-            title,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
-        )
-    }
-}
-
-@Composable
 fun Scrollable3DStack(
     items: List<PromptHistory>,
     onNavigateToApp: (String) -> Unit = {},
@@ -250,7 +215,8 @@ fun Scrollable3DStack(
             // Pre-calculate positions for all visible items
             visibleItems.associate { itemInfo ->
                 val itemCenterY = itemInfo.offset + itemInfo.size / 2f
-                val distanceFromCenter = kotlin.math.abs(itemCenterY - screenCenterY) / screenCenterY
+                val distanceFromCenter =
+                    kotlin.math.abs(itemCenterY - screenCenterY) / screenCenterY
                 val normalizedDistance = distanceFromCenter.coerceIn(0f, 2f)
 
                 itemInfo.index to CardTransform(
@@ -333,115 +299,6 @@ fun Scrollable3DStack(
     }
 }
 
-@Composable
-fun ThreeDImageCard(
-    historyItem: PromptHistory,
-    rotationX: Float,
-    rotationY: Float,
-    backgroundColor: Color = Color.Black,
-    modifier: Modifier = Modifier,
-    onNavigateToApp: (String) -> Unit = {}
-) {
-    val context = LocalContext.current
-
-    // Async thumbnail loading with state management
-    var screenshotBitmap by remember(historyItem.id) { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
-    var isLoading by remember(historyItem.id) { mutableStateOf(true) }
-
-    // Load thumbnail asynchronously
-    LaunchedEffect(historyItem.id) {
-        screenshotBitmap = OptimizedImageLoader.loadThumbnail(
-            context = context,
-            appId = historyItem.id,
-            maxWidth = 300,
-            maxHeight = 200
-        )
-        isLoading = false
-    }
-
-    val displayTitle = historyItem.title?.takeIf { it.isNotBlank() }
-        ?: historyItem.prompt.take(50) + "..."
-
-    Box(
-        modifier = modifier
-            .graphicsLayer {
-                this.rotationX = rotationX
-                this.rotationY = rotationY
-                cameraDistance = 12 * density
-            }
-            .clip(RoundedCornerShape(16.dp))
-    ) {
-        // Background image or color
-        when {
-            screenshotBitmap != null -> {
-                Image(
-                    bitmap = screenshotBitmap!!,
-                    contentDescription = "App screenshot",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer { alpha = 0.7f }, // 70% opacity for image
-                    contentScale = ContentScale.Crop
-                )
-            }
-            isLoading -> {
-                // Show loading state with background color
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(backgroundColor.copy(alpha = 0.3f))
-                )
-            }
-            else -> {
-                // Fallback to solid background color when no image
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(backgroundColor)
-                )
-            }
-        }
-
-        // Black overlay for text readability and click handling
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color.Black.copy(alpha = 0.8f)
-                        ),
-                        startY = 0f,
-                        endY = Float.POSITIVE_INFINITY
-                    )
-                )
-                .clickable { onNavigateToApp(historyItem.id) }
-        )
-
-        // Text content with improved contrast
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            contentAlignment = Alignment.BottomStart
-        ) {
-            Text(
-                text = displayTitle,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    shadow = Shadow(
-                        color = Color.Black,
-                        offset = Offset(2f, 2f),
-                        blurRadius = 4f
-                    )
-                )
-            )
-        }
-    }
-}
-
 // Data class to hold pre-calculated transform values
 private data class CardTransform(
     val scale: Float = 1f,
@@ -450,84 +307,6 @@ private data class CardTransform(
     val isNearCenter: Boolean = true
 )
 
-// Global image cache to store thumbnails across recompositions
-private object ImageCache {
-    private val cache = ConcurrentHashMap<String, androidx.compose.ui.graphics.ImageBitmap>()
-
-    fun get(key: String) = cache[key]
-    fun put(key: String, bitmap: androidx.compose.ui.graphics.ImageBitmap) {
-        // Limit cache size to prevent memory issues
-        if (cache.size >= 50) {
-            cache.clear() // Simple cache eviction
-        }
-        cache[key] = bitmap
-    }
-}
-
-// Optimized image loading utility
-object OptimizedImageLoader {
-    suspend fun loadThumbnail(
-        context: android.content.Context,
-        appId: String,
-        maxWidth: Int = 300,
-        maxHeight: Int = 200
-    ): androidx.compose.ui.graphics.ImageBitmap? = withContext(Dispatchers.IO) {
-        val cacheKey = "${appId}_${maxWidth}_${maxHeight}"
-
-        // Check cache first
-        ImageCache.get(cacheKey)?.let { return@withContext it }
-
-        // Load and resize image
-        val screenshotFile = ScreenshotUtils.getScreenshotFile(context, appId)
-        screenshotFile?.let { file ->
-            try {
-                // First, get image dimensions without loading full image
-                val options = BitmapFactory.Options().apply {
-                    inJustDecodeBounds = true
-                }
-                BitmapFactory.decodeFile(file.absolutePath, options)
-
-                // Calculate sample size for downscaling
-                val sampleSize = calculateInSampleSize(options, maxWidth, maxHeight)
-
-                // Load the scaled-down image
-                val loadOptions = BitmapFactory.Options().apply {
-                    inSampleSize = sampleSize
-                    inJustDecodeBounds = false
-                    inPreferredConfig = android.graphics.Bitmap.Config.RGB_565 // Use less memory
-                }
-
-                val bitmap = BitmapFactory.decodeFile(file.absolutePath, loadOptions)
-                bitmap?.let {
-                    val imageBitmap = it.asImageBitmap()
-                    ImageCache.put(cacheKey, imageBitmap)
-                    imageBitmap
-                }
-            } catch (e: Exception) {
-                null
-            }
-        }
-    }
-
-    private fun calculateInSampleSize(
-        options: BitmapFactory.Options,
-        reqWidth: Int,
-        reqHeight: Int
-    ): Int {
-        val (height: Int, width: Int) = options.run { outHeight to outWidth }
-        var inSampleSize = 1
-
-        if (height > reqHeight || width > reqWidth) {
-            val halfHeight: Int = height / 2
-            val halfWidth: Int = width / 2
-
-            while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
-                inSampleSize *= 2
-            }
-        }
-        return inSampleSize
-    }
-}
 
 @Composable
 fun StacksFloatingToolbar(
@@ -652,265 +431,6 @@ fun StacksFloatingMenuItem(
     }
 }
 
-@Composable
-fun SearchBarWithFavorites(
-    searchText: TextFieldValue,
-    onSearchTextChange: (TextFieldValue) -> Unit,
-    showFavorites: Boolean,
-    onToggleFavorites: () -> Unit,
-    onClearSearch: () -> Unit,
-    favoriteItems: List<PromptHistory>,
-    onNavigateToApp: (String) -> Unit,
-    focusRequester: FocusRequester,
-    modifier: Modifier = Modifier
-) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-
-    // Calculate most used apps (you can implement your own logic here)
-    val mostUsedItems = remember(favoriteItems) {
-        // For now, using sample logic - you can replace with actual usage tracking
-        favoriteItems.shuffled().take(5) // Placeholder for most used logic
-    }
-
-    Column(modifier = modifier) {
-        // Semi-transparent white pill search bar
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(28.dp),
-            color = Color.White.copy(alpha = 0.9f),
-            shadowElevation = 4.dp
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Logo/Star icon (clickable to show favorites)
-                IconButton(
-                    onClick = onToggleFavorites,
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Show favorites",
-                        tint = if (showFavorites) Color(0xFFFFB74D) else Color.Gray,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                // Search text field
-                OutlinedTextField(
-                    value = searchText,
-                    onValueChange = onSearchTextChange,
-                    modifier = Modifier
-                        .weight(1f)
-                        .focusRequester(focusRequester),
-                    placeholder = {
-                        Text(
-                            text = "Search your apps...",
-                            color = Color.Gray,
-                            fontSize = 16.sp
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    },
-                    trailingIcon = {
-                        if (searchText.text.isNotBlank()) {
-                            IconButton(onClick = onClearSearch) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Clear search",
-                                    tint = Color.Gray,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                    },
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        cursorColor = Color(0xFFFF8A65)
-                    ),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Search
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onSearch = {
-                            keyboardController?.hide()
-                        }
-                    )
-                )
-            }
-        }
-
-        // White box with favorites and most used (shown when favorites are active and no typing)
-        AnimatedVisibility(
-            visible = showFavorites && searchText.text.isBlank() && (favoriteItems.isNotEmpty() || mostUsedItems.isNotEmpty()),
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically()
-        ) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                shape = RoundedCornerShape(16.dp),
-                color = Color.White.copy(alpha = 0.95f),
-                shadowElevation = 4.dp
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    // Favorite Apps Section
-                    if (favoriteItems.isNotEmpty()) {
-                        Text(
-                            text = "Favorite Apps",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black.copy(alpha = 0.8f),
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
-
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(horizontal = 4.dp)
-                        ) {
-                            items(favoriteItems.size) { index ->
-                                FavoriteAppCard(
-                                    historyItem = favoriteItems[index],
-                                    onNavigateToApp = onNavigateToApp
-                                )
-                            }
-                        }
-                    }
-
-                    // Most Used Apps Section
-                    if (mostUsedItems.isNotEmpty()) {
-                        if (favoriteItems.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(20.dp))
-                        }
-
-                        Text(
-                            text = "Most Used Apps",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black.copy(alpha = 0.8f),
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
-
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(horizontal = 4.dp)
-                        ) {
-                            items(mostUsedItems.size) { index ->
-                                MostUsedAppCard(
-                                    historyItem = mostUsedItems[index],
-                                    onNavigateToApp = onNavigateToApp
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun FavoriteAppCard(
-    historyItem: PromptHistory,
-    onNavigateToApp: (String) -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .size(width = 120.dp, height = 80.dp)
-            .clickable { onNavigateToApp(historyItem.id) },
-        shape = RoundedCornerShape(12.dp),
-        color = Color.White.copy(alpha = 0.8f),
-        shadowElevation = 2.dp
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = "Favorite app",
-                tint = Color(0xFFFFB74D),
-                modifier = Modifier.size(24.dp)
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = historyItem.title?.take(15) ?: historyItem.prompt.take(15),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.Black.copy(alpha = 0.8f),
-                maxLines = 2,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
-fun MostUsedAppCard(
-    historyItem: PromptHistory,
-    onNavigateToApp: (String) -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .size(width = 120.dp, height = 80.dp)
-            .clickable { onNavigateToApp(historyItem.id) },
-        shape = RoundedCornerShape(12.dp),
-        color = Color.White.copy(alpha = 0.8f),
-        shadowElevation = 2.dp
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            // Placeholder for most used icon (can be a different icon or same as favorite)
-            Icon(
-                imageVector = Icons.Default.Star, // Change this icon if needed
-                contentDescription = "Most used app",
-                tint = Color(0xFFFFB74D),
-                modifier = Modifier.size(24.dp)
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = historyItem.title?.take(15) ?: historyItem.prompt.take(15),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.Black.copy(alpha = 0.8f),
-                maxLines = 2,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-        }
-    }
-}
 
 @Preview
 @Composable

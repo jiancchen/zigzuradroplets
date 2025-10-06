@@ -1,4 +1,4 @@
-package com.zigzura.droplets
+package com.zigzura.droplets.receiver
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -10,8 +10,9 @@ import android.os.Build
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.zigzura.droplets.MainActivity
+import com.zigzura.droplets.R
 import org.json.JSONArray
-import org.json.JSONObject
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream

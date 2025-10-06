@@ -2,7 +2,8 @@ package com.zigzura.droplets.data
 
 object PromptGenerator {
 
-    private  val PROP_FORMAT = """Generate single-file HTML app for Android WebView. Vanilla JS, NO frameworks (React/Vue/etc).
+    private val PROP_FORMAT =
+        """Generate single-file HTML app for Android WebView. Vanilla JS, NO frameworks (React/Vue/etc).
 
 OUTPUT FORMAT:
 Respond with ONLY the complete HTML code. No explanations, no markdown code blocks, no commentary.
@@ -245,7 +246,8 @@ CRITICAL: Output ONLY the HTML. Do not wrap in markdown. Do not explain.
 
 User request: """
 
-    private  val PROP_FORMAT2 = """Generate single-file HTML app for Android WebView. Vanilla JS, NO frameworks (React/Vue/etc).
+    private val PROP_FORMAT2 =
+        """Generate single-file HTML app for Android WebView. Vanilla JS, NO frameworks (React/Vue/etc).
 OUTPUT FORMAT:
 Respond with ONLY the complete HTML code. No explanations, no markdown code blocks, no commentary.
 Start with <!DOCTYPE html> and end with </html>. Nothing before or after.
@@ -446,7 +448,317 @@ TECHNICAL:
 CRITICAL: Output ONLY the HTML. Do not wrap in markdown. Do not explain.
 User request: """
 
-    fun generatePrompt(userInput: String): String {
-        return PROP_FORMAT + userInput
+    private val PROP_FORMAT3 =
+        try {
+            """Generate single-file HTML app for Android WebView. Vanilla JS, NO frameworks (React/Vue/etc).
+    
+    OUTPUT FORMAT:
+    Respond with ONLY the complete HTML code. No explanations, no markdown code blocks, no commentary.
+    Start with <!DOCTYPE html> and end with </html>. Nothing before or after.
+    
+    REQUIRED META TAG:
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    MOBILE DESIGN:
+    - Center content for portrait phones (360-400px width typical)
+    - Body background: transparent (background: transparent;)
+    - Container positioning: margin-top: 40px for top spacing
+    - Container height strategy:
+      * For static apps (calculators, forms): Center vertically with auto height
+      * For dynamic list apps (todos, notes, logs): min-height: calc(100vh - 80px) to fill screen
+    - Use min-height: 100vh (NOT height: 100vh) to prevent viewport cutoff
+    - For body/container: flex with min-height allows proper scrolling
+    - Container width: 100% (padding handled by native Android container)
+    - Use flexbox/grid for layout
+    - Font size ≥16px (prevents zoom on input)
+    - Touch targets ≥44px
+    - Responsive padding: padding:20px
+    - Maintain consistent spacing/margins between elements  
+    - ALL elements must use box-sizing: border-box to include padding in width calculations
+    - Input fields, buttons must not exceed container width
+    - Use word-wrap: break-word for text content to prevent horizontal overflow
+    - Add to global CSS: * { box-sizing: border-box; }
+    
+    CONTAINER HEIGHT RULES:
+    - If app has dynamic/expandable content (lists that grow: todos, notes, feeds, logs, chats, trackers):
+      Container must be full-height from start: min-height: calc(100vh - 80px);
+      Add overflow-y: auto; so content scrolls inside the fixed container
+    - If app has static/fixed content (calculators, converters, single forms):
+      Container uses auto height and centers vertically (no forced full-height)
+    - Key principle: Don't let container grow with content - either full-height or auto, never dynamic
+    
+    ALLOWED CDN LIBRARIES (via <script src> or <link href>):
+    ✓ Three.js: https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js
+    ✓ Chart.js: https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js
+    ✓ D3.js: https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js
+    ✓ Tone.js (audio): https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js
+    ✓ Math.js: https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js
+    ✓ Bootstrap CSS: https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css
+    ✓ Google Fonts: https://fonts.googleapis.com
+    
+    AVAILABLE ANDROID FEATURES (ONLY THESE):
+    ✓ Storage:
+      Android.saveData(key,value) - save string data
+      Android.loadData(key)→string - load data
+      Android.getAllData()→JSON - get all data
+      Android.deleteData(key) - delete key
+      
+    ✓ Reminders:
+      Android.setReminder(id,milliseconds,title,message) - schedule notification
+      Android.cancelReminder(id) - cancel reminder
+      Android.getReminders()→JSON - list reminders
+    
+    CRITICAL JAVASCRIPT PATTERNS:
+    ✓ Always check Android availability: if(typeof Android!=='undefined'){...}
+    ✓ IMPORTANT: Android.getAllData() returns an object with ALL keys, not just one value
+    ✓ To load a specific key: use Android.loadData(key) NOT Android.getAllData()
+    ✓ Correct pattern for loading:
+      const stored = Android.loadData('tasks');
+      if (stored) {
+        tasks = JSON.parse(stored);
+      }
+    ✓ When saving, track the KEY used so you can delete with the SAME key later
+    
+    UNAVAILABLE ANDROID FEATURES (MUST REJECT):
+    ✗ Camera/Photos: navigator.mediaDevices, getUserMedia, <input type="file" accept="image/*">, camera access
+    ✗ Microphone/Audio Input: audio recording, speech recognition, microphone access
+    ✗ Geolocation: navigator.geolocation, GPS, location services
+    ✗ Device Sensors: accelerometer, gyroscope, compass, proximity sensor
+    ✗ Contacts: reading/writing device contacts
+    ✗ Calendar: reading/writing device calendar events
+    ✗ Phone/SMS: making calls, sending SMS, reading messages
+    ✗ File System: reading/writing files, file picker, downloads folder
+    ✗ Bluetooth: BLE, Bluetooth devices
+    ✗ NFC: NFC tags, payments
+    ✗ Notifications: Push notifications (reminders via Android.setReminder work)
+    ✗ Biometrics: fingerprint, face recognition
+    ✗ Screen: brightness control, orientation lock, keep awake
+    ✗ Vibration: navigator.vibrate (not available)
+    ✗ Clipboard: reading clipboard (writing via execCommand may work)
+    ✗ Share API: navigator.share (not available)
+    ✗ Battery: battery status API
+    
+    Design Language:
+    Use a layered 3D card design language. Each UI element should feel like a floating card with soft shadows, rounded corners, and depth.
+    Use bold typography (Inter, Poppins, or Manrope).
+    Backgrounds are flat and vibrant, e.g. yellow, teal, or coral.
+    Foreground cards use black or white surfaces with subtle inner shadows.
+    Accent elements use gradient highlights (like pink–orange, purple–blue).
+    Keep spacing generous, corners round, and UI components centered.
+    The style should feel playful yet technical, like a mix of code cards and album covers.
+    
+    Refernce Design: 
+      body {
+          background: #f7d441;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          font-family: "Inter", sans-serif;
+        }
+    
+        .stack {
+          position: relative;
+          width: 320px;
+          height: 440px;
+          transform-style: preserve-3d;
+        }
+    
+        .card {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 24px;
+          box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          transition: transform 0.3s ease;
+        }
+    
+        .card:nth-child(1) {
+          background: #111;
+          color: #fff;
+          transform: translateZ(0);
+        }
+    
+        .card:nth-child(2) {
+          background: #fff;
+          color: #222;
+          transform: translateY(20px) translateZ(-40px);
+        }
+    
+        .card:nth-child(3) {
+          background: #111;
+          transform: translateY(40px) translateZ(-80px);
+        }
+    
+        .display {
+          width: 85%;
+          height: 60px;
+          background: rgba(255,255,255,0.1);
+          border-radius: 12px;
+          text-align: right;
+          padding: 16px;
+          font-size: 1.6rem;
+          box-shadow: inset 0 0 10px rgba(255,255,255,0.1);
+        }
+    
+        .buttons {
+          margin-top: 20px;
+          width: 85%;
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
+        }
+    
+        button {
+          height: 60px;
+          border: none;
+          border-radius: 12px;
+          font-size: 1.2rem;
+          font-weight: 600;
+          cursor: pointer;
+          background: linear-gradient(145deg, #1b1b1b, #292929);
+          color: white;
+          box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+          transition: all 0.15s ease;
+        }
+    
+        button:active {
+          transform: scale(0.96);
+          box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+    
+        .accent {
+          background: linear-gradient(145deg, #f43f5e, #ec4899);
+        }
+    
+    INTERACTIONS:
+    - All transitions: 0.15-0.2s
+    - Hover effects: lift elements up with translate
+    - Press effects: push down with translate
+    - Use transform (NOT margin/position) for animations
+    - webkit-tap-highlight-color: transparent; for all elements
+    
+    STYLE KEYWORDS:
+    Neo-brutalist, playful, chunky borders, hard shadows, gradient accents, warm peach tones, tactile, energetic, bold typography, high contrast
+    
+    If user requests:
+    - "modern", "sleek", "professional", "dark" → Use V2
+    - "fun", "colorful", "playful", "bright" → Use V1
+    - No style specified → Use V2 (default)
+    
+    STRICTLY FORBIDDEN (MUST REJECT):
+    ✗ fetch(), XMLHttpRequest, WebSocket - NO network requests
+    ✗ Live external data: stock prices, crypto, weather, news, social media
+    ✗ APIs requiring real-time data
+    ✗ localStorage/sessionStorage (use Android.saveData instead)
+    ✗ Service Workers, Web Workers
+    ✗ IndexedDB, Web SQL
+    
+    APPS THAT WORK (generate anything like these):
+    ✓ 3D graphics, games, simulations (use Three.js!)
+    ✓ Charts with demo data (use Chart.js)
+    ✓ Canvas drawing/painting apps
+    ✓ Music/audio synthesis apps (use Tone.js - no recording)
+    ✓ Calculators, converters, utilities
+    ✓ Timers, stopwatches, countdowns, alarms (use Android.setReminder)
+    ✓ Notes, todo lists (use Android.saveData)
+    ✓ Offline games: tic-tac-toe, snake, dice, cards, puzzles
+    ✓ Random generators: names, passwords, jokes, colors
+    ✓ Simulators with demo data: weather, stocks, social posts
+    ✓ Text editors, markdown editors
+    ✓ Animations, particle effects
+    ✓ Math/science tools, visualizations
+    ✓ Habit trackers, mood trackers
+    ✓ Pixel art editors, color pickers
+    ✓ Music players with embedded audio
+    
+    APPS THAT DON'T WORK (reject these with suggestions):
+    ✗ Photo editor/camera app → Reject: Drawing app or color filter simulator
+    ✗ QR code scanner → Reject: QR code generator (create codes, not scan)
+    ✗ Voice recorder → Reject: Audio synthesizer or music maker (Tone.js)
+    ✗ Barcode scanner → Reject: Barcode generator
+    ✗ GPS tracker/maps → Reject: Compass simulator or distance calculator
+    ✗ Step counter → Reject: Manual activity logger
+    ✗ Flashlight app → Reject: Screen flashlight (bright white screen)
+    ✗ Social media with photo upload → Reject: Text-based post designer
+    ✗ Live stock prices → Reject: Stock price simulator
+    ✗ Real-time chat → Reject: Offline message composer
+    ✗ Video player from device → Reject: Embedded video with URLs
+    ✗ Contact manager → Reject: Personal contact list (stored in app)
+    ✗ PDF reader from files → Reject: Text document viewer
+    ✗ Music player from device files → Reject: Music synthesizer
+    ✗ Image gallery from photos → Reject: Emoji/ASCII art gallery
+    ✗ Weather with real data → Reject: Weather simulator
+    ✗ Navigation app → Reject: Direction game or manual route planner
+    
+    REJECTION PROTOCOL:
+    If prompt requires unavailable features, respond with ONLY:
+    
+    XPROMPTREJECTREASON: [Feature] requires [unavailable capability]. Suggestion: [specific alternative that works].
+    
+    Examples:
+    XPROMPTREJECTREASON: Camera access unavailable. Suggestion: Drawing app with brush tools and color palette.
+    XPROMPTREJECTREASON: Photo upload requires file access. Suggestion: Emoji collage maker or ASCII art generator.
+    XPROMPTREJECTREASON: Voice recording requires microphone. Suggestion: Music synthesizer with Tone.js for audio creation.
+    
+    NAVIGATION CONSTRAINTS:
+    - Single-page apps only - no multi-page navigation or routing
+    - Use modals, overlays, or show/hide sections for secondary content
+    - Avoid apps requiring separate screens or tab navigation between views
+    - All functionality must be accessible from a single scrolling page
+    
+    FUNCTIONAL REQUIREMENTS:
+    - Apps with lists/collections MUST include full functionality: add, edit (if applicable), delete, persist with Android.saveData
+    - Never generate placeholder buttons or incomplete features
+    - All interactive elements must be fully functional on first load
+    - Data must persist across app restarts using Android.saveData/loadData
+    
+    CSS FOR DYNAMIC LIST APPS:
+    Container must use:
+      width: 100%;
+      min-height: calc(100vh - 80px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    
+    This ensures todos, notes, trackers fill viewport height immediately.
+    
+    DO NOT REJECT:
+    - 3D apps (Three.js available)
+    - Charts (Chart.js with demo data)
+    - Audio synthesis (Tone.js for making sounds)
+    - Canvas/drawing (native HTML5)
+    - Games and simulations
+    - Text-based apps
+    - Calculators and tools
+    - Apps using Android.saveData or Android.setReminder
+    
+    REQUIREMENTS:
+    ✓ Complete working code (no TODOs/placeholders)
+    ✓ All CSS inline in <style>
+    ✓ All JS inline in <script>
+    ✓ Beautiful, polished mobile UI
+    ✓ Use realistic demo/simulated data when needed
+    ✓ App works immediately without setup
+    ✓ Only use available Android features (saveData, setReminder)
+    - ALL elements must use box-sizing: border-box to include padding in width calculations
+    - Input fields, buttons must not exceed container width
+    - Use word-wrap: break-word for text content to prevent horizontal overflow
+    - Add to global CSS: * { box-sizing: border-box; }
+    
+    CRITICAL: Output ONLY the HTML. Do not wrap in markdown. Do not explain.
+    
+    User request: """
+        } catch (e: Exception) {
+            TODO("Not yet implemented")
+        }
+
+
+    fun generatePrompt(userInput: String, style: String? = PromptStyles.DEFAULT): String {
+        return PROP_FORMAT3 + userInput
     }
 }

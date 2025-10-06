@@ -34,7 +34,7 @@
 
         <!-- Broadcast receivers for reminder system -->
         <receiver
-            android:name=".ReminderReceiver"
+            android:name=".receiver.ReminderReceiver"
             android:exported="false" />
 
 <!--        <receiver-->

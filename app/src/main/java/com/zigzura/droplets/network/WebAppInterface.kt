@@ -1,4 +1,4 @@
-package com.zigzura.droplets
+package com.zigzura.droplets.network
 
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -8,6 +8,7 @@ import android.os.Build
 import android.util.Log
 import android.webkit.JavascriptInterface
 import android.widget.Toast
+import com.zigzura.droplets.receiver.ReminderReceiver
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject

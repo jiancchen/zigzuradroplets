@@ -95,11 +95,6 @@ fun SettingsScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        SettingsItem(
-                            title = "3D Stacks View",
-                            description = "View your apps in a 3D perspective stack",
-                            onClick = onNavigateToStacks
-                        )
                     }
                 }
             }
@@ -134,9 +129,19 @@ fun SettingsScreen(
 
                         var expanded by remember { mutableStateOf(false) }
                         val models = listOf(
-                            "claude-3-5-sonnet-20241022",
-                            "claude-3-haiku-20240307",
-                            "claude-3-opus-20240229"
+                            "claude-sonnet-4-5-20250929",
+                            "claude-sonnet-4-20250514",
+                            "claude-3-7-sonnet-latest",
+                            "claude-3-5-haiku-latest",
+                            "claude-3-haiku-20240307"
+                        )
+
+                        val modelCosts = mapOf(
+                            "claude-sonnet-4-5-20250929" to "~\$3 / 1M input + \$15 / 1M output",
+                            "claude-sonnet-4-20250514" to "~\$3 / 1M input + \$15 / 1M output",
+                            "claude-3-7-sonnet-latest" to "~\$3 / 1M input + \$15 / 1M output",
+                            "claude-3-5-haiku-latest" to "~\$0.80 / 1M input + ~\$4.00 / 1M output",
+                            "claude-3-haiku-20240307" to "~\$0.25 / 1M input + \$1.25 / 1M output"
                         )
 
                         ExposedDropdownMenuBox(
@@ -177,6 +182,15 @@ fun SettingsScreen(
                                 }
                             }
                         }
+
+// After the ExposedDropdownMenuBox in your model selection section:
+                        Text(
+                            text = modelCosts[savedModel] ?: "",
+                            fontSize = 12.sp,
+                            color = Color(0xFF64748B),
+                            modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+                        )
+
 
                         Spacer(modifier = Modifier.height(16.dp))
 

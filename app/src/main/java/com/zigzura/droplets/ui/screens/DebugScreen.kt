@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.zigzura.droplets.Weblet
+import com.zigzura.droplets.ui.components.Weblet
 import com.zigzura.droplets.data.PromptConstant
 
 @OptIn(ExperimentalMaterial3Api::class)
