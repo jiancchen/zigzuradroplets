@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -26,7 +27,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zigzura.droplets.data.PromptHistory
 import com.zigzura.droplets.utils.ScreenshotUtils
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 
 @Composable
 fun StacksScreen(
@@ -234,12 +238,19 @@ fun ThreeDImageCard(
 ) {
     val context = LocalContext.current
 
-    // Lazy load screenshot with remember to avoid reloading on recomposition
-    val screenshotBitmap = remember(historyItem.id) {
-        val screenshotFile = ScreenshotUtils.getScreenshotFile(context, historyItem.id)
-        screenshotFile?.let { file ->
-            BitmapFactory.decodeFile(file.absolutePath)?.asImageBitmap()
-        }
+    // Async thumbnail loading with state management
+    var screenshotBitmap by remember(historyItem.id) { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    var isLoading by remember(historyItem.id) { mutableStateOf(true) }
+
+    // Load thumbnail asynchronously
+    LaunchedEffect(historyItem.id) {
+        screenshotBitmap = OptimizedImageLoader.loadThumbnail(
+            context = context,
+            appId = historyItem.id,
+            maxWidth = 300,
+            maxHeight = 200
+        )
+        isLoading = false
     }
 
     val displayTitle = historyItem.title?.takeIf { it.isNotBlank() }
@@ -255,22 +266,33 @@ fun ThreeDImageCard(
             .clip(RoundedCornerShape(16.dp))
     ) {
         // Background image or color
-        if (screenshotBitmap != null) {
-            Image(
-                bitmap = screenshotBitmap,
-                contentDescription = "App screenshot",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer { alpha = 0.7f }, // 70% opacity for image
-                contentScale = ContentScale.Crop
-            )
-        } else {
-            // Fallback to solid background color
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(backgroundColor)
-            )
+        when {
+            screenshotBitmap != null -> {
+                Image(
+                    bitmap = screenshotBitmap!!,
+                    contentDescription = "App screenshot",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { alpha = 0.7f }, // 70% opacity for image
+                    contentScale = ContentScale.Crop
+                )
+            }
+            isLoading -> {
+                // Show loading state with background color
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(backgroundColor.copy(alpha = 0.3f))
+                )
+            }
+            else -> {
+                // Fallback to solid background color when no image
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(backgroundColor)
+                )
+            }
         }
 
         // Black overlay for text readability
@@ -304,6 +326,85 @@ private data class CardTransform(
     val alpha: Float = 1f,
     val isNearCenter: Boolean = true
 )
+
+// Global image cache to store thumbnails across recompositions
+private object ImageCache {
+    private val cache = ConcurrentHashMap<String, androidx.compose.ui.graphics.ImageBitmap>()
+
+    fun get(key: String) = cache[key]
+    fun put(key: String, bitmap: androidx.compose.ui.graphics.ImageBitmap) {
+        // Limit cache size to prevent memory issues
+        if (cache.size >= 50) {
+            cache.clear() // Simple cache eviction
+        }
+        cache[key] = bitmap
+    }
+}
+
+// Optimized image loading utility
+object OptimizedImageLoader {
+    suspend fun loadThumbnail(
+        context: android.content.Context,
+        appId: String,
+        maxWidth: Int = 300,
+        maxHeight: Int = 200
+    ): androidx.compose.ui.graphics.ImageBitmap? = withContext(Dispatchers.IO) {
+        val cacheKey = "${appId}_${maxWidth}_${maxHeight}"
+
+        // Check cache first
+        ImageCache.get(cacheKey)?.let { return@withContext it }
+
+        // Load and resize image
+        val screenshotFile = ScreenshotUtils.getScreenshotFile(context, appId)
+        screenshotFile?.let { file ->
+            try {
+                // First, get image dimensions without loading full image
+                val options = BitmapFactory.Options().apply {
+                    inJustDecodeBounds = true
+                }
+                BitmapFactory.decodeFile(file.absolutePath, options)
+
+                // Calculate sample size for downscaling
+                val sampleSize = calculateInSampleSize(options, maxWidth, maxHeight)
+
+                // Load the scaled-down image
+                val loadOptions = BitmapFactory.Options().apply {
+                    inSampleSize = sampleSize
+                    inJustDecodeBounds = false
+                    inPreferredConfig = android.graphics.Bitmap.Config.RGB_565 // Use less memory
+                }
+
+                val bitmap = BitmapFactory.decodeFile(file.absolutePath, loadOptions)
+                bitmap?.let {
+                    val imageBitmap = it.asImageBitmap()
+                    ImageCache.put(cacheKey, imageBitmap)
+                    imageBitmap
+                }
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
+    private fun calculateInSampleSize(
+        options: BitmapFactory.Options,
+        reqWidth: Int,
+        reqHeight: Int
+    ): Int {
+        val (height: Int, width: Int) = options.run { outHeight to outWidth }
+        var inSampleSize = 1
+
+        if (height > reqHeight || width > reqWidth) {
+            val halfHeight: Int = height / 2
+            val halfWidth: Int = width / 2
+
+            while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
+                inSampleSize *= 2
+            }
+        }
+        return inSampleSize
+    }
+}
 
 @Preview
 @Composable
