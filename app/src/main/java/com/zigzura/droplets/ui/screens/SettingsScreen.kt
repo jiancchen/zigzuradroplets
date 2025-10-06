@@ -2,6 +2,7 @@ package com.zigzura.droplets.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
@@ -33,301 +34,218 @@ fun SettingsScreen(
     val savedTemperature by preferencesManager.temperature.collectAsState(initial = 0.3f)
     val savedModel by preferencesManager.claudeModel.collectAsState(initial = "claude-3-5-sonnet-20241022")
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // API Configuration Section
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp)
-                ) {
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = Color(0xFFFFD84E), // Your app's yellow background
+        topBar = {
+            TopAppBar(
+                title = {
                     Text(
-                        text = "API Configuration",
-                        fontSize = 18.sp,
+                        text = "Settings",
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1E293B),
-                        modifier = Modifier.padding(bottom = 12.dp)
+                        color = Color.Black.copy(alpha = 0.8f)
                     )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                )
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // API Configuration Section
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.White.copy(alpha = 0.95f),
+                    shadowElevation = 4.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp)
+                    ) {
+                        Text(
+                            text = "API Configuration",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black.copy(alpha = 0.8f),
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
 
-                    SettingsItem(
-                        title = "API Key Settings",
-                        description = "Configure your Claude API key",
-                        onClick = onNavigateToSignup
-                    )
+                        SettingsItem(
+                            title = "API Key Settings",
+                            description = "Configure your Claude API key",
+                            onClick = onNavigateToSignup
+                        )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                    SettingsItem(
-                        title = "Debug Mode",
-                        description = "Enable debugging features",
-                        onClick = onNavigateToDebug
-                    )
+                        SettingsItem(
+                            title = "Debug Mode",
+                            description = "Enable debugging features",
+                            onClick = onNavigateToDebug
+                        )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                    SettingsItem(
-                        title = "3D Stacks View",
-                        description = "View your apps in a 3D perspective stack",
-                        onClick = onNavigateToStacks
-                    )
+                        SettingsItem(
+                            title = "3D Stacks View",
+                            description = "View your apps in a 3D perspective stack",
+                            onClick = onNavigateToStacks
+                        )
+                    }
                 }
             }
-        }
 
-        // Claude Model Configuration Section
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp)
+            // Claude Model Configuration Section
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.White.copy(alpha = 0.95f),
+                    shadowElevation = 4.dp
                 ) {
-                    Text(
-                        text = "Claude Model Settings",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1E293B),
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-
-                    // Model Selection
                     Column(
-                        modifier = Modifier.padding(bottom = 16.dp)
+                        modifier = Modifier.padding(20.dp)
                     ) {
+                        Text(
+                            text = "Claude Model Settings",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black.copy(alpha = 0.8f),
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        // Model Selection
                         Text(
                             text = "Model",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF475569),
+                            color = Color.Black.copy(alpha = 0.8f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
 
                         var expanded by remember { mutableStateOf(false) }
-                        var selectedModel by remember { mutableStateOf(savedModel) }
-
                         val models = listOf(
-                            "claude-opus-4-1@20250805" to "Claude 4.1 Opus (Latest)",
-                            "claude-opus-4@20250514" to "Claude 4 Opus",
-                            "claude-sonnet-4@20250514" to "Claude 4 Sonnet",
-                            "claude-3-7-sonnet@20250219" to "Claude 3.7 Sonnet",
-                            "claude-3-5-haiku@20241022" to "Claude 3.5 Haiku",
-                            "claude-3-5-sonnet-v2@20241022" to "Claude 3.5 Sonnet v2",
-                            "claude-3-opus@20240229" to "Claude 3 Opus",
-                            "claude-3-haiku@20240307" to "Claude 3 Haiku"
+                            "claude-3-5-sonnet-20241022",
+                            "claude-3-haiku-20240307",
+                            "claude-3-opus-20240229"
                         )
-
-                        // Update saved model state when preferences change
-                        LaunchedEffect(savedModel) {
-                            selectedModel = savedModel
-                        }
 
                         ExposedDropdownMenuBox(
                             expanded = expanded,
                             onExpandedChange = { expanded = !expanded }
                         ) {
                             OutlinedTextField(
-                                value = models.find { it.first == selectedModel }?.second ?: selectedModel,
+                                value = savedModel,
                                 onValueChange = { },
                                 readOnly = true,
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                                },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .menuAnchor(),
+                                    .menuAnchor()
+                                    .fillMaxWidth(),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF6366F1),
-                                    unfocusedBorderColor = Color(0xFFE2E8F0)
-                                )
+                                    focusedBorderColor = Color(0xFFFFB74D),
+                                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                                    focusedTextColor = Color.Black.copy(alpha = 0.8f),
+                                    unfocusedTextColor = Color.Black.copy(alpha = 0.8f)
+                                ),
+                                shape = RoundedCornerShape(12.dp)
                             )
+
                             ExposedDropdownMenu(
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false }
                             ) {
-                                models.forEach { (value, label) ->
+                                models.forEach { model ->
                                     DropdownMenuItem(
-                                        text = { Text(label) },
+                                        text = { Text(model) },
                                         onClick = {
-                                            selectedModel = value
-                                            expanded = false
                                             scope.launch {
-                                                preferencesManager.saveClaudeModel(value)
+                                                preferencesManager.saveClaudeModel(model)
                                             }
+                                            expanded = false
                                         }
                                     )
                                 }
                             }
                         }
-                    }
 
-                    // Temperature Setting
-                    Column {
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Temperature Setting
                         Text(
-                            text = "Temperature",
+                            text = "Temperature: ${String.format("%.1f", savedTemperature)}",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF475569),
+                            color = Color.Black.copy(alpha = 0.8f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
 
-                        var temperature by remember { mutableFloatStateOf(savedTemperature) }
-
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "0.0 (Deterministic)",
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF64748B)
-                                )
-                                Text(
-                                    text = String.format("%.1f", temperature),
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF1E293B)
-                                )
-                                Text(
-                                    text = "1.0 (Creative)",
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF64748B)
-                                )
-                            }
-
-                            Slider(
-                                value = temperature,
-                                onValueChange = {
-                                    temperature = it
-                                    scope.launch {
-                                        preferencesManager.saveTemperature(it)
-                                    }
-                                },
-                                valueRange = 0f..1f,
-                                steps = 9, // Creates 0.1 increments
-                                colors = SliderDefaults.colors(
-                                    thumbColor = Color(0xFF6366F1),
-                                    activeTrackColor = Color(0xFF6366F1),
-                                    inactiveTrackColor = Color(0xFFE2E8F0)
-                                ),
-                                modifier = Modifier.fillMaxWidth()
+                        Slider(
+                            value = savedTemperature,
+                            onValueChange = { newValue ->
+                                scope.launch {
+                                    preferencesManager.saveTemperature(newValue)
+                                }
+                            },
+                            valueRange = 0f..1f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = Color(0xFFFFB74D),
+                                activeTrackColor = Color(0xFFFFB74D),
+                                inactiveTrackColor = Color.Gray.copy(alpha = 0.3f)
                             )
+                        )
 
-                            Text(
-                                text = when {
-                                    temperature <= 0.2f -> "Very deterministic - consistent, focused responses"
-                                    temperature <= 0.5f -> "Balanced - good mix of consistency and creativity"
-                                    temperature <= 0.8f -> "Creative - more varied and innovative responses"
-                                    else -> "Very creative - highly varied, experimental responses"
-                                },
-                                fontSize = 12.sp,
-                                color = Color(0xFF64748B),
-                                modifier = Modifier.padding(top = 4.dp)
+                        Text(
+                            text = "Lower values make responses more focused, higher values more creative",
+                            fontSize = 12.sp,
+                            color = Color.Black.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+            }
+
+            // App Statistics Section
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.White.copy(alpha = 0.95f),
+                    shadowElevation = 4.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp)
+                    ) {
+                        Text(
+                            text = "App Statistics",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black.copy(alpha = 0.8f),
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            StatItem(
+                                label = "Total Apps",
+                                value = promptHistory.size.toString()
+                            )
+                            StatItem(
+                                label = "Favorites",
+                                value = promptHistory.count { it.favorite == true }.toString()
                             )
                         }
                     }
-                }
-            }
-        }
-
-        // Storage & Data Section
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp)
-                ) {
-                    Text(
-                        text = "Storage & Data",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1E293B),
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Apps Created",
-                            fontSize = 14.sp,
-                            color = Color(0xFF64748B)
-                        )
-                        Text(
-                            text = "${promptHistory.size}",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF1E293B)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Favorites",
-                            fontSize = 14.sp,
-                            color = Color(0xFF64748B)
-                        )
-                        Text(
-                            text = "${promptHistory.count { it.favorite == true }}",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF1E293B)
-                        )
-                    }
-                }
-            }
-        }
-
-        // About Section
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp)
-                ) {
-                    Text(
-                        text = "About",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1E293B),
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-
-                    Text(
-                        text = "Droplets v1.0.0",
-                        fontSize = 14.sp,
-                        color = Color(0xFF64748B)
-                    )
-
-                    Text(
-                        text = "© 2025 AI Mini-Apps",
-                        fontSize = 12.sp,
-                        color = Color(0xFF94A3B8),
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
                 }
             }
         }
@@ -373,5 +291,27 @@ fun SettingsItem(
                 modifier = Modifier.size(20.dp)
             )
         }
+    }
+}
+
+@Composable
+fun StatItem(
+    label: String,
+    value: String
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = value,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black.copy(alpha = 0.8f)
+        )
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = Color.Black.copy(alpha = 0.6f)
+        )
     }
 }
