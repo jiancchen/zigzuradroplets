@@ -543,20 +543,7 @@ fun StacksFloatingToolbar(
             .padding(16.dp),
         contentAlignment = Alignment.BottomEnd
     ) {
-        // Backdrop for dismissing menu
-        if (isExpanded) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.3f))
-                    .clickable(
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) {
-                        isExpanded = false
-                    }
-            )
-        }
+        // Remove the backdrop - no more black overlay covering content
 
         Column(
             horizontalAlignment = Alignment.End,
@@ -599,14 +586,14 @@ fun StacksFloatingToolbar(
                 }
             }
 
-            // Main FAB
+            // Main FAB with custom colors to match your yellow theme
             FloatingActionButton(
                 onClick = { isExpanded = !isExpanded },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                containerColor = Color(0xFFFFB74D), // Golden yellow to match your theme
+                contentColor = Color.White, // White icon for contrast
                 elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 6.dp,
-                    pressedElevation = 8.dp
+                    defaultElevation = 8.dp,
+                    pressedElevation = 12.dp
                 )
             ) {
                 Icon(
@@ -631,23 +618,25 @@ fun StacksFloatingMenuItem(
     ) {
         Surface(
             shape = RoundedCornerShape(8.dp),
-            color = MaterialTheme.colorScheme.surface,
+            color = Color.White.copy(alpha = 0.95f), // Match search bar white theme
             tonalElevation = 2.dp,
-            shadowElevation = 4.dp
+            shadowElevation = 4.dp,
+            modifier = Modifier.width(100.dp) // Fixed width to prevent jarring text differences
         ) {
             Text(
                 text = label,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Normal
+                color = Color.Black.copy(alpha = 0.8f), // Dark text for contrast on white
+                fontWeight = FontWeight.Medium,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center // Center align for consistency
             )
         }
 
         SmallFloatingActionButton(
             onClick = onClick,
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            containerColor = Color(0xFFFFB74D), // Golden yellow to match main FAB
+            contentColor = Color.White, // White icon for contrast
             elevation = FloatingActionButtonDefaults.elevation(
                 defaultElevation = 4.dp,
                 pressedElevation = 8.dp
