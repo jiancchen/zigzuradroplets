@@ -355,6 +355,7 @@ fun StacksFloatingToolbar(
                     StacksFloatingMenuItem(
                         icon = Icons.Default.Home,
                         label = "My Apps",
+                        backgroundColor = Color(0xFF2196F3), // Vibrant blue
                         onClick = {
                             onNavigateToMain()
                             isExpanded = false
@@ -363,6 +364,7 @@ fun StacksFloatingToolbar(
                     StacksFloatingMenuItem(
                         icon = Icons.Default.Add,
                         label = "Create",
+                        backgroundColor = Color(0xFF4CAF50), // Vibrant green
                         onClick = {
                             onNavigateToCreate()
                             isExpanded = false
@@ -371,6 +373,7 @@ fun StacksFloatingToolbar(
                     StacksFloatingMenuItem(
                         icon = Icons.Default.Settings,
                         label = "Settings",
+                        backgroundColor = Color(0xFF9C27B0), // Vibrant purple
                         onClick = {
                             onNavigateToSettings()
                             isExpanded = false
@@ -403,7 +406,8 @@ fun StacksFloatingToolbar(
 fun StacksFloatingMenuItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    backgroundColor: Color = Color(0xFFE91E63) // Default vibrant color
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -411,7 +415,7 @@ fun StacksFloatingMenuItem(
     ) {
         Surface(
             shape = RoundedCornerShape(8.dp),
-            color = Color.White.copy(alpha = 0.95f), // Match search bar white theme
+            color = backgroundColor, // Use vibrant background color
             tonalElevation = 2.dp,
             shadowElevation = 4.dp,
             modifier = Modifier.width(100.dp) // Fixed width to prevent jarring text differences
@@ -420,7 +424,7 @@ fun StacksFloatingMenuItem(
                 text = label,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 style = MaterialTheme.typography.labelLarge,
-                color = Color.Black.copy(alpha = 0.8f), // Dark text for contrast on white
+                color = Color.White, // White text for contrast on vibrant background
                 fontWeight = FontWeight.Medium,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center // Center align for consistency
             )
@@ -428,7 +432,7 @@ fun StacksFloatingMenuItem(
 
         SmallFloatingActionButton(
             onClick = onClick,
-            containerColor = Color(0xFFFFB74D), // Golden yellow to match main FAB
+            containerColor = backgroundColor, // Match the text background color
             contentColor = Color.White, // White icon for contrast
             elevation = FloatingActionButtonDefaults.elevation(
                 defaultElevation = 4.dp,

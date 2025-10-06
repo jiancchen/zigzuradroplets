@@ -220,7 +220,8 @@ fun CreateScreen(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFFFFB74D),
                                 contentColor = Color.White,
-                                disabledContainerColor = Color.Gray.copy(alpha = 0.3f)
+                                disabledContainerColor = Color(0xFFFFB74D).copy(alpha = 0.3f),
+                                disabledContentColor = Color.Black.copy(alpha = 0.6f)
                             ),
                             shape = RoundedCornerShape(12.dp)
                         ) {
@@ -622,7 +623,7 @@ fun TemplateCard(
             .fillMaxWidth()
             .clickable { onPromptChange(prompt) },
         shape = RoundedCornerShape(12.dp),
-        color = Color.White.copy(alpha = 0.8f),
+        color = Color(0xFFFFD84E).copy(alpha = 0.3f), // Light yellow background matching app theme
         shadowElevation = 2.dp
     ) {
         Row(
