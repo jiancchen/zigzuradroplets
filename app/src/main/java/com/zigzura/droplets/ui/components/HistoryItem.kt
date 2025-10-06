@@ -41,6 +41,9 @@ fun HistoryItem(
     var showDeleteDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
+    // Check if this item is still generating
+    val isGenerating = historyItem.html == "GENERATING..."
+
     // Load screenshot if available
     val screenshotBitmap = remember(historyItem.id) {
         val screenshotFile = ScreenshotUtils.getScreenshotFile(context, historyItem.id)
@@ -130,7 +133,7 @@ fun HistoryItem(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = historyItem.prompt,
+                            text = if (isGenerating) "Generating your app..." else historyItem.prompt,
                             fontSize = 14.sp,
                             maxLines = if (screenshotBitmap != null) 1 else 2,
                             overflow = TextOverflow.Ellipsis,
@@ -143,7 +146,7 @@ fun HistoryItem(
                         )
                     } else {
                         Text(
-                            text = historyItem.prompt,
+                            text = if (isGenerating) "⚡ Generating your app..." else historyItem.prompt,
                             fontWeight = FontWeight.Medium,
                             maxLines = if (screenshotBitmap != null) 2 else 3,
                             overflow = TextOverflow.Ellipsis,
@@ -155,6 +158,32 @@ fun HistoryItem(
                             else
                                 MaterialTheme.colorScheme.onSurface
                         )
+                    }
+
+                    // Show generating indicator
+                    if (isGenerating) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = if (screenshotBitmap != null)
+                                    Color.White
+                                else
+                                    MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "In progress...",
+                                fontSize = 12.sp,
+                                color = if (screenshotBitmap != null)
+                                    Color.White.copy(alpha = 0.8f)
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
 

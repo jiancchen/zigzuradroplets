@@ -45,6 +45,8 @@ fun MainScreen(
     val currentHtml by viewModel.currentHtml.collectAsState()
     val currentHistoryItem by viewModel.currentHistoryItem.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val isGenerating by viewModel.isGenerating.collectAsState()
+    val generationProgress by viewModel.generationProgress.collectAsState()
     val error by viewModel.error.collectAsState()
     val promptRejection by viewModel.promptRejection.collectAsState()
     val promptHistory by viewModel.promptHistory.collectAsState(initial = emptyList())
@@ -155,32 +157,44 @@ fun MainScreen(
                 .padding(horizontal = 16.dp)
         ) {
             when (selectedTab) {
-                0 -> MyAppsScreen(
-                    promptHistory = filteredHistory,
-                    showFavoritesOnly = showFavoritesOnly,
-                    onShowFavoritesToggle = { showFavoritesOnly = it },
-                    onHistoryItemClick = { historyItem ->
-                        // Since AppViewScreen is removed, you might want to handle this differently
-                        // For now, we'll just show a message or handle as needed
-                        scope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = "App '${historyItem.title ?: "Untitled"}' selected"
-                            )
-                        }
-                    },
-                    onToggleFavorite = { id ->
-                        viewModel.toggleFavorite(id)
-                    },
-                    onUpdateTitle = { id, title ->
-                        viewModel.updateTitle(id, title)
-                    },
-                    onClearHistory = {
-                        viewModel.clearHistory()
-                    },
-                    onDeleteItem = { id ->
-                        viewModel.deletePromptHistory(context, id)
+                0 -> {
+                    // Global generation progress bar for My Apps screen
+                    if (isGenerating) {
+                        AnimatedGenerationProgress(
+                            progressText = generationProgress,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp)
+                        )
                     }
-                )
+
+                    MyAppsScreen(
+                        promptHistory = filteredHistory,
+                        showFavoritesOnly = showFavoritesOnly,
+                        onShowFavoritesToggle = { showFavoritesOnly = it },
+                        onHistoryItemClick = { historyItem ->
+                            // Since AppViewScreen is removed, you might want to handle this differently
+                            // For now, we'll just show a message or handle as needed
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = "App '${historyItem.title ?: "Untitled"}' selected"
+                                )
+                            }
+                        },
+                        onToggleFavorite = { id ->
+                            viewModel.toggleFavorite(id)
+                        },
+                        onUpdateTitle = { id, title ->
+                            viewModel.updateTitle(id, title)
+                        },
+                        onClearHistory = {
+                            viewModel.clearHistory()
+                        },
+                        onDeleteItem = { id ->
+                            viewModel.deletePromptHistory(context, id)
+                        }
+                    )
+                }
 
                 1 -> CreateScreen(
                     prompt = prompt,
@@ -196,7 +210,9 @@ fun MainScreen(
                         // Since AppViewScreen is removed, just show success message
                         // The LaunchedEffect above will handle showing the success message
                     },
-                    isLoading = isLoading
+                    isLoading = isLoading,
+                    isGenerating = isGenerating,
+                    generationProgress = generationProgress
                 )
 
                 2 -> SettingsScreen(
@@ -364,6 +380,104 @@ fun FloatingMenuItem(
                 imageVector = icon,
                 contentDescription = label,
                 modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun AnimatedGenerationProgress(
+    progressText: String,
+    modifier: Modifier = Modifier
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "progress")
+
+    // Animated progress bar that moves left to right
+    val progressOffset by infiniteTransition.animateFloat(
+        initialValue = -1f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "progressOffset"
+    )
+
+    // Pulsing alpha for the text
+    val textAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.7f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "textAlpha"
+    )
+
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF6366F1).copy(alpha = 0.1f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "⚡ Generating your app...",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF6366F1)
+            )
+
+            Text(
+                text = progressText,
+                fontSize = 14.sp,
+                color = Color(0xFF475569).copy(alpha = textAlpha),
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+
+            // Animated progress bar container
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Color(0xFFE2E8F0))
+            ) {
+                // Moving progress indicator
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.3f)
+                        .offset(x = (progressOffset * 200).dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(
+                            Brush.horizontalGradient(
+                                colors = listOf(
+                                    Color(0xFF6366F1).copy(alpha = 0.3f),
+                                    Color(0xFF6366F1),
+                                    Color(0xFF6366F1).copy(alpha = 0.3f)
+                                )
+                            )
+                        )
+                )
+            }
+
+            Text(
+                text = "⚠️ Don't leave the app until generation is complete",
+                fontSize = 12.sp,
+                color = Color(0xFF64748B),
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
             )
         }
     }

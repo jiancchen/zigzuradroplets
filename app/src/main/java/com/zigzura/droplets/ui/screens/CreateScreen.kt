@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,7 +29,9 @@ fun CreateScreen(
     onPromptChange: (String) -> Unit,
     onSubmit: (String) -> Unit,
     onAppCreated: (String) -> Unit = {},
-    isLoading: Boolean
+    isLoading: Boolean,
+    isGenerating: Boolean = false,
+    generationProgress: String = ""
 ) {
     var selectedStyle by remember { mutableStateOf(PromptStyles.DEFAULT) }
     var customStyle by remember { mutableStateOf("") }
@@ -308,6 +311,59 @@ fun CreateScreen(
                         prompt = stringResource(R.string.template_timer_prompt),
                         onPromptChange = onPromptChange
                     )
+                }
+            }
+
+            // Generation progress section
+            if (isGenerating) {
+                item {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xFF6366F1).copy(alpha = 0.1f),
+                        shadowElevation = 4.dp
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                text = "⚡ Generating your app...",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF6366F1)
+                            )
+
+                            Text(
+                                text = generationProgress,
+                                fontSize = 14.sp,
+                                color = Color(0xFF475569),
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+
+                            LinearProgressIndicator(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(4.dp)
+                                    .clip(RoundedCornerShape(2.dp)),
+                                color = Color(0xFF6366F1),
+                                trackColor = Color(0xFFE2E8F0)
+                            )
+
+                            Text(
+                                text = "⚠️ Don't leave the app until generation is complete",
+                                fontSize = 12.sp,
+                                color = Color(0xFF64748B),
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                            )
+                        }
+                    }
                 }
             }
         }

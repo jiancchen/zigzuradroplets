@@ -1,10 +1,12 @@
 package com.zigzura.droplets
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -17,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -33,20 +36,41 @@ import com.zigzura.droplets.ui.screens.StacksScreen
 import com.zigzura.droplets.ui.screens.LoadingSplashScreen
 import com.zigzura.droplets.ui.screens.welcome.WelcomeNavigationScreen
 import com.zigzura.droplets.ui.theme.DropletsTheme
+import com.zigzura.droplets.utils.AppNotificationManager
+import com.zigzura.droplets.utils.PermissionManager
 import com.zigzura.droplets.utils.PreferenceManager
 import com.zigzura.droplets.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import com.zigzura.droplets.ui.screens.CreateScreen
 import com.zigzura.droplets.ui.screens.SettingsScreen
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.Locale
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    @Inject
+    lateinit var permissionManager: PermissionManager
+
+    @Inject
+    lateinit var appNotificationManager: AppNotificationManager
+
     private lateinit var languageManager: LanguageManager
     private var lastAppliedLanguage: String = LanguageManager.SYSTEM_DEFAULT
+
+    // Permission request launcher
+    private val requestNotificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Permission granted - notifications can now be shown
+        } else {
+            // Permission denied - handle accordingly
+        }
+    }
 
     override fun attachBaseContext(newBase: Context?) {
         if (newBase == null) {
@@ -73,6 +97,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
+        // Initialize notification channel
+        appNotificationManager.createNotificationChannel(this)
+
+        // Request notification permission if needed
+        if (!permissionManager.hasNotificationPermission(this)) {
+            permissionManager.requestNotificationPermission(this)
+        }
+
         // Initialize language manager if not already done
         if (!::languageManager.isInitialized) {
             languageManager = LanguageManager(this)
@@ -98,6 +130,27 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // App is in foreground - update ViewModel
+        lifecycleScope.launch {
+            val viewModel = try {
+                // Get the MainViewModel if available
+                // Note: This is a simplified approach - in production you might want
+                // to use a more robust method to access the ViewModel
+                null // We'll handle this in the Composable instead
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // App is going to background - update ViewModel
+        // We'll handle this in the Composable to have access to the ViewModel
     }
 }
 
