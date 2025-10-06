@@ -4,6 +4,7 @@ import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -14,7 +15,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -25,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.geometry.Offset
 import com.zigzura.droplets.data.PromptHistory
 import com.zigzura.droplets.utils.ScreenshotUtils
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +38,8 @@ import java.util.concurrent.ConcurrentHashMap
 
 @Composable
 fun StacksScreen(
-    promptHistory: List<PromptHistory> = emptyList()
+    promptHistory: List<PromptHistory> = emptyList(),
+    onNavigateToApp: (String) -> Unit = {}
 ) {
     // Use actual prompt history or sample data if empty
     val historyItems = if (promptHistory.isNotEmpty()) {
@@ -69,6 +74,7 @@ fun StacksScreen(
     ) {
         Scrollable3DStack(
             items = historyItems,
+            onNavigateToApp = onNavigateToApp,
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -105,6 +111,7 @@ fun ThreeDCard(
 @Composable
 fun Scrollable3DStack(
     items: List<PromptHistory>,
+    onNavigateToApp: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -210,6 +217,7 @@ fun Scrollable3DStack(
                     rotationX = rotationX,
                     rotationY = rotationY,
                     backgroundColor = Color.Black,
+                    onNavigateToApp = onNavigateToApp,
                     modifier = Modifier
                         .fillMaxSize()
                         .then(
@@ -236,7 +244,8 @@ fun ThreeDImageCard(
     rotationX: Float,
     rotationY: Float,
     backgroundColor: Color = Color.Black,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNavigateToApp: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -297,14 +306,24 @@ fun ThreeDImageCard(
             }
         }
 
-        // Black overlay for text readability
+        // Black overlay for text readability and click handling
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f))
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.8f)
+                        ),
+                        startY = 0f,
+                        endY = Float.POSITIVE_INFINITY
+                    )
+                )
+                .clickable { onNavigateToApp(historyItem.id) }
         )
 
-        // Text content
+        // Text content with improved contrast
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -315,7 +334,14 @@ fun ThreeDImageCard(
                 text = displayTitle,
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    shadow = Shadow(
+                        color = Color.Black,
+                        offset = Offset(2f, 2f),
+                        blurRadius = 4f
+                    )
+                )
             )
         }
     }

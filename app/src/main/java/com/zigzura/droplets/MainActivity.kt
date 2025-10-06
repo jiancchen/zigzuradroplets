@@ -110,7 +110,10 @@ fun DropletsNavigation() {
             val promptHistory by viewModel.promptHistory.collectAsState(initial = emptyList())
 
             StacksScreen(
-                promptHistory = promptHistory
+                promptHistory = promptHistory,
+                onNavigateToApp = { appId ->
+                    navController.navigate(Screen.AppView.createRoute(appId))
+                }
             )
         }
 
